@@ -1,0 +1,24 @@
+name: Supabase sveglia
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # ogni giorno alle 6:17 (ora UTC)
+  workflow_dispatch:        # permette anche l'avvio a mano
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tieni attivo il database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          status=$(curl -s -o risposta.txt -w "%{http_code}" -X POST \
+            "$SUPABASE_URL/rest/v1/rpc/keepalive" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "Codice di risposta: $status"
+          cat risposta.txt
+          test "$status" = "200"
