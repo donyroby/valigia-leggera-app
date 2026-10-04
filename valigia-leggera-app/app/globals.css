@@ -75,3 +75,4 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .sent p{margin:0 0 10px}
 .logout{margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
 @media (max-width:480px){.card{padding:26px 22px}h1{font-size:1.6rem}}
+@media print{body{background:#fff;padding:0;display:block;min-height:0}}

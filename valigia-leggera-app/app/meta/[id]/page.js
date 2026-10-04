@@ -3,15 +3,15 @@ import { notFound } from "next/navigation";
 import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
 import SaveButton from "./SaveButton";
+import Condividi from "./Condividi";
 import { ALL } from "@/lib/viaggi/dati";
 import { calc, links, itinerary, fmt, seasonLabel, isHere } from "@/lib/viaggi/calcoli";
+import { etichetta } from "@/lib/viaggi/condividi";
 import { daIndirizzo, budgetDaIndirizzo, versoIndirizzo, stessoViaggio } from "@/lib/viaggi/parametri";
 import { createClient } from "@/lib/supabase/server";
 
 const mapsUrl = (name, city) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + ", " + city);
 
-// Etichette dei link: nel prototipo alcune erano scritte per Donato ("la tua commissione")
-const etichetta = (n) => n.replace(" (con la tua commissione)", "").replace(" (con tratta e date, i tuoi link)", " (tratta e date già inserite)");
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -65,7 +65,7 @@ export default async function MetaPage({ params, searchParams }) {
   return (
     <div className={s.page} data-profile={p.profile}>
       <TopBar />
-      <p className={s.back}><Link href="/">← Torna alla ricerca</Link></p>
+      <p className={`${s.back} ${s.noprint}`}><Link href="/">← Torna alla ricerca</Link></p>
 
       <article className={s.detail}>
         <div className={s.dlgHead}>
@@ -95,8 +95,11 @@ export default async function MetaPage({ params, searchParams }) {
           </p>
         )}
 
-        <div className={s.actions}>
+        <div className={`${s.actions} ${s.noprint}`}>
           <SaveButton loggedIn={!!user} savedId={savedId} destId={d.id} params={p} pp={pp} budget={budget} here={here} />
+        </div>
+        <div className={s.actions}>
+          <Condividi destId={d.id} params={p} />
         </div>
 
         <h2 className={s.h}>Itinerario proposto</h2>

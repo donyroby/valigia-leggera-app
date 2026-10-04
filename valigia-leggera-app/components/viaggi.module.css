@@ -254,3 +254,17 @@
 .mbadge{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .footer{margin:28px 0 8px;padding-top:16px;border-top:1px solid var(--line);font-size:.9rem}
 .footer a{color:var(--sea);font-weight:700}
+
+/* Condividi */
+.sharePanel{margin-top:14px}
+.shareTxt{width:100%;font:inherit;font-size:.88rem;line-height:1.45;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.sharePanel .links{margin-top:10px}
+
+/* Stampa: solo la scheda, senza menu, pulsanti e link per prenotare */
+@media print{
+  .page{max-width:none;color:#000}
+  .noprint,.links,.actions{display:none!important}
+  .detail{box-shadow:none;border:0;padding:0;margin:0;background:#fff}
+  .day{break-inside:avoid}
+  .map{display:none}
+}

@@ -4,7 +4,7 @@ import s from "@/components/viaggi.module.css";
 // Intestazione comune alle pagine di viaggio
 export default function TopBar() {
   return (
-    <header className={s.top}>
+    <header className={`${s.top} ${s.noprint}`}>
       <Link href="/" className={s.brand}>
         <svg viewBox="0 0 26 23" aria-hidden="true">
           <rect x="9" y="1" width="8" height="6" rx="2" fill="none" stroke="var(--sun-ink)" strokeWidth="2" />
