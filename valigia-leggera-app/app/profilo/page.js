@@ -33,7 +33,7 @@ export default async function ProfiloPage() {
         isNew={!profile}
       />
       <p className="account-line">
-        <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/cerca">Cerca un viaggio</Link>
+        <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/salvadanaio">Salvadanaio</Link> · <Link href="/cerca">Cerca un viaggio</Link>
       </p>
       <form action="/auth/esci" method="post" className="logout">
         <button type="submit" className="link-button">

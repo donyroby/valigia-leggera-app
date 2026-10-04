@@ -18,7 +18,8 @@ export default function TopBar() {
       </Link>
       <nav className={s.nav} aria-label="Sezioni">
         <Link href="/cerca">Cerca</Link>
-        <Link href="/viaggi">I miei viaggi</Link>
+        <Link href="/viaggi"><span className={s.long}>I miei viaggi</span><span className={s.short}>Viaggi</span></Link>
+        <Link href="/salvadanaio">Salvadanaio</Link>
         <Link href="/profilo">Account</Link>
       </nav>
     </header>
