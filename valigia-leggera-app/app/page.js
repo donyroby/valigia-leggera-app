@@ -26,6 +26,9 @@ export default async function Home() {
         </a>
       </div>
       <p className="account-line">
+        Novità in costruzione: <Link href="/cerca">prova la nuova ricerca</Link>, con le stesse mete e gli stessi calcoli del prototipo.
+      </p>
+      <p className="account-line">
         {user ? (
           <>
             Hai fatto l&apos;accesso come <strong>{user.email}</strong>.{" "}
