@@ -57,7 +57,7 @@ export default function LowCost() {
       <TopBar />
       <div className={s.summary}>
         <h1 className={s.pageTitle}>Idee low cost</h1>
-        <span>Da {dep.n} · {base.people} {base.people === 1 ? "persona" : "persone"} · <Link href="/cerca">cambia nella ricerca</Link></span>
+        <span>Da {dep.n} · {base.people} {base.people === 1 ? "persona" : "persone"} · <Link href="/">cambia nella ricerca</Link></span>
       </div>
 
       <div className={s.lcToolbar}>

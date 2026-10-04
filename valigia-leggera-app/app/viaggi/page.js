@@ -45,7 +45,7 @@ export default async function ViaggiPage() {
       {!error && items.length === 0 && (
         <div className={s.empty}>
           <strong>Non hai ancora salvato nessun viaggio.</strong><br />
-          <Link href="/cerca">Cerca una meta</Link>, apri &quot;Dettagli e itinerario&quot; e usa &quot;Salva viaggio&quot;.
+          <Link href="/">Cerca una meta</Link>, apri &quot;Dettagli e itinerario&quot; e usa &quot;Salva viaggio&quot;.
         </div>
       )}
 

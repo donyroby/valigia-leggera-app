@@ -138,7 +138,7 @@ export default function Salvadanaio({ userId, initial, trips, defaultProfile }) 
       <h2 className={s.sectionTitle}>I tuoi obiettivi</h2>
       {calcoli.viaggi.length === 0 ? (
         <div className={s.mempty}>
-          Non hai ancora salvato nessun viaggio. <Link href="/cerca">Cerca una meta</Link>, apri &quot;Dettagli e itinerario&quot; e usa &quot;Salva viaggio&quot;:
+          Non hai ancora salvato nessun viaggio. <Link href="/">Cerca una meta</Link>, apri &quot;Dettagli e itinerario&quot; e usa &quot;Salva viaggio&quot;:
           comparirà qui come obiettivo, con una barra che si riempie ogni volta che aggiungi denaro.
         </div>
       ) : (

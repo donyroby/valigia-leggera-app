@@ -7,6 +7,7 @@ import { fmt, fmtD, seasonLabel, todayISO, addDays, daysBetween } from "@/lib/vi
 import { DEFAULT_PEOPLE, FILTRI, statoIniziale, sistemaStato, scegliDestinazione, suggerimenti, cerca } from "@/lib/viaggi/ricerca";
 import PassCard from "./PassCard";
 import TopBar from "@/components/TopBar";
+import { createClient } from "@/lib/supabase/client";
 
 const KEY = "vl2.cerca";
 const CITTA = ALL.slice().sort((a, b) => a.name.localeCompare(b.name, "it"));
@@ -23,6 +24,21 @@ export default function Cerca() {
     const init = sistemaStato(saved || statoIniziale());
     setSt(init);
     setDestText(init.dest === "tutte" ? "" : init.destQ || "");
+    // Prima ricerca su questo dispositivo: parto dal profilo preferito dell'account, se c'è
+    if (!saved) {
+      (async () => {
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+          const { data } = await supabase.from("profiles").select("default_profile").eq("id", user.id).maybeSingle();
+          const pr = data?.default_profile;
+          if (pr && pr !== init.profile) {
+            setSt((cur) => sistemaStato({ ...cur, profile: pr, people: DEFAULT_PEOPLE[pr], kids: Math.min(cur.kids, DEFAULT_PEOPLE[pr] - 1) }));
+          }
+        } catch {}
+      })();
+    }
   }, []);
 
   useEffect(() => {

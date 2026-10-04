@@ -5,7 +5,7 @@ import s from "@/components/viaggi.module.css";
 export default function TopBar() {
   return (
     <header className={s.top}>
-      <Link href="/cerca" className={s.brand}>
+      <Link href="/" className={s.brand}>
         <svg viewBox="0 0 26 23" aria-hidden="true">
           <rect x="9" y="1" width="8" height="6" rx="2" fill="none" stroke="var(--sun-ink)" strokeWidth="2" />
           <rect x="1.5" y="6" width="23" height="16" rx="3.5" fill="var(--sun)" stroke="var(--sun-ink)" strokeWidth="1.6" />
@@ -17,7 +17,7 @@ export default function TopBar() {
         Valigia Leggera
       </Link>
       <nav className={s.nav} aria-label="Sezioni">
-        <Link href="/cerca">Cerca</Link>
+        <Link href="/">Cerca</Link>
         <Link href="/lowcost">Low cost</Link>
         <Link href="/viaggi"><span className={s.long}>I miei viaggi</span><span className={s.short}>Viaggi</span></Link>
         <Link href="/salvadanaio">Salvadanaio</Link>

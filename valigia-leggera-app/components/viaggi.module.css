@@ -4,8 +4,8 @@
   --sun:#E8B23A; --sun-ink:#332100; --sea:#0B7E80; --alert:#B3323D; --ok:#0B7E80;
   --c1:#0C2340; --c2:#0B7E80; --c3:#E8A800; --c4:#D35A5A; --c5:#7A6BC4;
   --shadow:0 1px 2px rgba(12,35,64,.08),0 6px 18px rgba(12,35,64,.06);
-  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
-  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Bricolage Grotesque Variable","Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"DM Sans Variable","DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   width:100%;max-width:1040px;margin:0 auto auto;align-self:center;
   color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
 }
@@ -251,3 +251,6 @@
 @media (prefers-color-scheme:dark){.mbadge{color:#06222A}}
 .summary a{color:var(--sea);font-weight:700}
 @media (max-width:380px){.nav a{font-size:.74rem;padding:7px 2px}}
+.mbadge{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.footer{margin:28px 0 8px;padding-top:16px;border-top:1px solid var(--line);font-size:.9rem}
+.footer a{color:var(--sea);font-weight:700}

@@ -65,7 +65,7 @@ export default async function MetaPage({ params, searchParams }) {
   return (
     <div className={s.page} data-profile={p.profile}>
       <TopBar />
-      <p className={s.back}><Link href="/cerca">← Torna alla ricerca</Link></p>
+      <p className={s.back}><Link href="/">← Torna alla ricerca</Link></p>
 
       <article className={s.detail}>
         <div className={s.dlgHead}>
