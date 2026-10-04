@@ -113,7 +113,7 @@ export default function Salvadanaio({ userId, initial, trips, defaultProfile }) 
           <label htmlFor="monthly">Quanto pensi di riuscire ad aggiungere ogni mese, in media (facoltativo, solo per la stima dei tempi)</label>
           <div className={s.row}>
             <input id="monthly" type="range" min="0" max="300" step="10" value={pig.monthly} onChange={(e) => setPig((p) => ({ ...p, monthly: +e.target.value }))} />
-            <output htmlFor="monthly">{pig.monthly ? fmt(pig.monthly) + "/mese" : "—"}</output>
+            <output htmlFor="monthly" className={pig.monthly ? "" : s.outputEmpty}>{pig.monthly ? fmt(pig.monthly) + "/mese" : "nessuna stima"}</output>
           </div>
         </div>
       </section>

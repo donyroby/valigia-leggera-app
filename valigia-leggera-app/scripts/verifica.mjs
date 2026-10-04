@@ -64,3 +64,24 @@ for (const dep of P.DEPS) for (const filter of R.FILTRI.map(([k]) => k)) for (co
 }
 console.log(`Ricerche confrontate: ${rChecks}` + (rErr ? `, DIFFERENZE: ${rErr}` : ", nessuna differenza."));
 if (rErr) process.exit(1);
+
+// 5. Low cost: stesse proposte del mese del prototipo
+{
+  const end2 = lines.findIndex(l => l.startsWith("const $="));
+  const ctx2 = vm.createContext({ localStorage: { getItem: () => null, setItem: () => {} }, console });
+  vm.runInContext(lines.slice(0, end2).join("\n") + "\n;globalThis.Q={contList,state,DEPS};", ctx2);
+  const Q = ctx2.Q;
+  fs.writeFileSync(path.join(tmp, "lowcost.mjs"), fs.readFileSync(path.join(src, "lowcost.js"), "utf8").replace('from "./dati"', 'from "./dati.mjs"').replace('from "./calcoli"', 'from "./calcoli.mjs"'));
+  const LC = await import(path.join(tmp, "lowcost.mjs"));
+  let n = 0, bad = 0;
+  for (const dep of Q.DEPS) for (let month = 1; month <= 12; month++) for (const cap of [150, 300, 900]) for (const nights of [2, 4]) for (const cont of ["italia", "europa", "mondo"]) {
+    Object.assign(Q.state, { from: dep.id, profile: "coppia", people: 2, kids: 0, kidsAges: [], tm: "auto", fc: true });
+    Q.state.lc = { month, cap, nights };
+    const date = `2027-${String(month).padStart(2, "0")}-15`;
+    const a = Q.contList(cont, cap, date, nights, 4).map(x => [x.r.d.id, x.r.pp, x.reason, x.badge]);
+    const b = LC.contList(cont, cap, date, nights, 4, { ...Q.state }, month).map(x => [x.r.d.id, x.r.pp, x.reason, x.badge]);
+    n++; if (JSON.stringify(a) !== JSON.stringify(b)) { bad++; if (bad < 4) console.log("Low cost diverso:", dep.id, month, cap, nights, cont); }
+  }
+  console.log(`Proposte low cost confrontate: ${n}` + (bad ? `, DIFFERENZE: ${bad}` : ", nessuna differenza."));
+  if (bad) process.exit(1);
+}
