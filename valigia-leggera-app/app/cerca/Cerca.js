@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import s from "@/components/viaggi.module.css";
 import { DEPS, ALL } from "@/lib/viaggi/dati";
 import { fmt, fmtD, seasonLabel, todayISO, addDays, daysBetween } from "@/lib/viaggi/calcoli";
@@ -14,6 +14,7 @@ const CITTA = ALL.slice().sort((a, b) => a.name.localeCompare(b.name, "it"));
 export default function Cerca() {
   const [st, setSt] = useState(null);
   const [destText, setDestText] = useState("");
+  const resultsRef = useRef(null);
 
   // Carica le ultime scelte da questo browser (solo comodità: la ricerca non viene salvata nel database)
   useEffect(() => {
@@ -49,6 +50,16 @@ export default function Cerca() {
   const setKidAge = (i, age) => { const a = st.kidsAges.slice(); a[i] = age; upd({ kidsAges: a }); };
 
   const { chosen, notFound, inb, over, cheapest, titolo, dep } = res;
+
+  // Il pulsante conferma quello che c'è scritto nella destinazione e porta ai risultati
+  const vaiAiRisultati = (e) => {
+    e.preventDefault();
+    commitDest(destText);
+    requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+  const etichettaCerca = destText.trim()
+    ? "Calcola il viaggio"
+    : inb.length ? `Mostra ${inb.length === 1 ? "la meta" : "le " + inb.length + " mete"} nel budget` : "Cerca";
   const card = (r, isOver) => <PassCard key={r.d.id} r={r} over={isOver} budget={st.budget} />;
 
   return (
@@ -64,7 +75,7 @@ export default function Cerca() {
         <span className={s.demo}>Prezzi stimati, non ancora reali</span>
       </section>
 
-      <section className={s.panel} aria-label="Parametri del viaggio">
+      <form className={s.panel} aria-label="Parametri del viaggio" onSubmit={vaiAiRisultati}>
         <div className={s.seg} role="radiogroup" aria-label="Con chi viaggi">
           {[["amici", "Tra amici", "ostelli, low cost"], ["coppia", "In coppia", "hotel e B&B"], ["famiglia", "In famiglia", "appartamenti"]].map(([v, l, sm]) => (
             <label key={v}>
@@ -87,7 +98,7 @@ export default function Cerca() {
               value={destText}
               onChange={(e) => { setDestText(e.target.value); if (!e.target.value) commitDest(""); }}
               onBlur={(e) => commitDest(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitDest(e.currentTarget.value); requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); } }}
             />
             <datalist id="cityList">
               {CITTA.map((d) => <option key={d.id} value={d.name}>{d.cc}</option>)}
@@ -147,8 +158,12 @@ export default function Cerca() {
               <span>Solo alloggi con cancellazione gratuita <small>(il filtro viene applicato sul sito di prenotazione)</small></span>
             </label>
           </div>
+          <div className={s.searchRow}>
+            <button type="submit" className={`${s.btn} ${s.sun} ${s.searchBtn}`}>{etichettaCerca}</button>
+            <span className={s.searchHint}>I risultati si aggiornano anche mentre cambi le scelte.</span>
+          </div>
         </div>
-      </section>
+      </form>
 
       <main>
         <div className={s.chips} role="group" aria-label="Filtra le mete">
@@ -156,7 +171,7 @@ export default function Cerca() {
             <button key={k} type="button" className={s.chip} aria-pressed={st.filter === k} onClick={() => upd({ filter: k })}>{l}</button>
           ))}
         </div>
-        <div className={s.summary}>
+        <div className={s.summary} ref={resultsRef}>
           <h2>{titolo}</h2>
           <span>
             Da {dep.n} · {fmtD(st.date)} - {fmtD(st.ret)} ({st.nights} {st.nights === 1 ? "notte" : "notti"}) · {seasonLabel(st.date)} · prezzi a persona

@@ -6,7 +6,7 @@
   --shadow:0 1px 2px rgba(12,35,64,.08),0 6px 18px rgba(12,35,64,.06);
   --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  width:100%;max-width:1040px;margin:0 auto;align-self:flex-start;
+  width:100%;max-width:1040px;margin:0 auto auto;align-self:center;
   color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
 }
 @media (prefers-color-scheme:dark){
@@ -29,7 +29,8 @@
 .page h1,.page h2,.page h3{font-family:var(--display);line-height:1.1;margin:0;color:var(--ink)}
 .page button,.page select,.page input{font:inherit;color:inherit}
 /* I pulsanti hanno i loro colori: senza queste righe il testo del pulsante scuro diventava invisibile */
-.page .btn{color:var(--bg)}
+.page .btn{color:var(--bg);font-weight:700}
+.page .chip{font-weight:500}
 .page .ghost{color:var(--ink)}
 .page .sun{color:var(--sun-ink)}
 .page :focus-visible{outline:3px solid var(--sun);outline-offset:2px}
@@ -176,3 +177,10 @@
 @media (max-width:480px){
   .top{flex-wrap:wrap}
 }
+
+/* Pulsante di ricerca in fondo al modulo */
+.searchRow{grid-column:1/-1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
+.page .searchBtn{margin-top:0;padding:14px 26px;font-size:1.05rem;border-radius:14px}
+.searchHint{color:var(--muted);font-size:.85rem}
+.summary{scroll-margin-top:16px}
+@media (max-width:720px){.page .searchBtn{flex:1 1 100%}}
