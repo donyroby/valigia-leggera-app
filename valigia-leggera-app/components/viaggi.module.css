@@ -28,6 +28,10 @@
 }
 .page h1,.page h2,.page h3{font-family:var(--display);line-height:1.1;margin:0;color:var(--ink)}
 .page button,.page select,.page input{font:inherit;color:inherit}
+/* I pulsanti hanno i loro colori: senza queste righe il testo del pulsante scuro diventava invisibile */
+.page .btn{color:var(--bg)}
+.page .ghost{color:var(--ink)}
+.page .sun{color:var(--sun-ink)}
 .page :focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 6px}
