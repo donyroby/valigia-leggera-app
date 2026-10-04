@@ -6,13 +6,16 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata = { title: "Accedi · Valigia Leggera" };
 
 export default async function AccediPage({ searchParams }) {
+  const params = await searchParams;
+  const nextRaw = typeof params?.next === "string" ? params.next : "";
+  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/profilo";
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) redirect("/profilo");
+  if (user) redirect(next);
 
-  const params = await searchParams;
   const linkError = params?.errore === "link";
 
   return (
@@ -29,7 +32,7 @@ export default async function AccediPage({ searchParams }) {
           nello stesso browser da cui lo richiedi.
         </p>
       )}
-      <LoginForm />
+      <LoginForm next={next} />
     </main>
   );
 }

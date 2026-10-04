@@ -38,7 +38,8 @@ const todayISO=()=>isoOf(new Date());
 const addDays=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return isoOf(d)};
 function defaultDate(){const d=new Date();d.setDate(d.getDate()+35);while(d.getDay()!==5)d.setDate(d.getDate()+1);return isoOf(d)}
 const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
-const fmt=n=>Math.round(n).toLocaleString("it-IT")+" €";
+// Separatore delle migliaia scritto a mano: il server e i browser formattano "it-IT" in modo diverso
+const fmt=n=>{const v=Math.round(n),a=String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g,".");return (v<0?"-":"")+a+" €"};
 const fmtD=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
 const dfmtR=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"});
 function seasonF(iso){const m=new Date(iso+"T12:00:00").getMonth()+1;

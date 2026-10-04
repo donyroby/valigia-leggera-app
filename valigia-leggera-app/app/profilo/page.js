@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileForm from "./ProfileForm";
@@ -31,6 +32,9 @@ export default async function ProfiloPage() {
         initialProfile={profile?.default_profile ?? "coppia"}
         isNew={!profile}
       />
+      <p className="account-line">
+        <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/cerca">Cerca un viaggio</Link>
+      </p>
       <form action="/auth/esci" method="post" className="logout">
         <button type="submit" className="link-button">
           Esci dall&apos;account

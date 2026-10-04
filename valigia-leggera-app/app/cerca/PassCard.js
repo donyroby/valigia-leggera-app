@@ -1,5 +1,7 @@
-import s from "./cerca.module.css";
+import s from "@/components/viaggi.module.css";
+import Link from "next/link";
 import { PARTS, fmt, links } from "@/lib/viaggi/calcoli";
+import { versoIndirizzo } from "@/lib/viaggi/parametri";
 
 // Scheda di una meta, come il "biglietto" del prototipo
 export default function PassCard({ r, over, budget }) {
@@ -32,6 +34,7 @@ export default function PassCard({ r, over, budget }) {
         <div className={s.pp}>{fmt(pp)}<small>a persona</small></div>
         <div className={s.tot}>{fmt(total)} per {p.people} {p.people === 1 ? "persona" : "persone"}, {p.nights} notti</div>
         <div className={`${s.status} ${diff <= 0 ? s.ok : s.no}`}>{diff <= 0 ? "Dentro il budget" : "+" + fmt(diff) + " oltre il budget"}</div>
+        <Link className={s.btn} href={`/meta/${d.id}?${versoIndirizzo(p)}`}>Dettagli e itinerario</Link>
         <div className={s.qlinks}>
           {L.voli.length > 0 && <a className={`${s.btn} ${s.ghost} ${s.sm}`} href={L.voli[0][1]} {...ext}>Voli</a>}
           {L.treni.length > 0 && <a className={`${s.btn} ${s.ghost} ${s.sm}`} href={L.treni[0][1]} {...ext}>Treni</a>}

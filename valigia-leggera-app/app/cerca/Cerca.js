@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import s from "./cerca.module.css";
+import s from "@/components/viaggi.module.css";
 import { DEPS, ALL } from "@/lib/viaggi/dati";
 import { fmt, fmtD, seasonLabel, todayISO, addDays, daysBetween } from "@/lib/viaggi/calcoli";
 import { DEFAULT_PEOPLE, FILTRI, statoIniziale, sistemaStato, scegliDestinazione, suggerimenti, cerca } from "@/lib/viaggi/ricerca";
 import PassCard from "./PassCard";
+import TopBar from "@/components/TopBar";
 
 const KEY = "vl2.cerca";
 const CITTA = ALL.slice().sort((a, b) => a.name.localeCompare(b.name, "it"));
@@ -53,20 +53,7 @@ export default function Cerca() {
 
   return (
     <div className={s.page} data-profile={st.profile}>
-      <header className={s.top}>
-        <Link href="/" className={s.brand}>
-          <svg viewBox="0 0 26 23" aria-hidden="true">
-            <rect x="9" y="1" width="8" height="6" rx="2" fill="none" stroke="var(--sun-ink)" strokeWidth="2" />
-            <rect x="1.5" y="6" width="23" height="16" rx="3.5" fill="var(--sun)" stroke="var(--sun-ink)" strokeWidth="1.6" />
-            <line x1="1.5" y1="12.5" x2="24.5" y2="12.5" stroke="var(--sun-ink)" strokeWidth="1.2" opacity=".55" />
-            <rect x="10.5" y="6" width="5" height="16" fill="none" stroke="var(--sun-ink)" strokeWidth="1.2" opacity=".55" />
-            <circle cx="6.5" cy="17.5" r="1.1" fill="var(--sun-ink)" />
-            <circle cx="19.5" cy="17.5" r="1.1" fill="var(--sun-ink)" />
-          </svg>
-          Valigia Leggera
-        </Link>
-        <Link href="/profilo" className={s.account}>Il tuo account</Link>
-      </header>
+      <TopBar />
 
       <section className={s.hero}>
         <h1>Dove ti porta il tuo budget?</h1>
