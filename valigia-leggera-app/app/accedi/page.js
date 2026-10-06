@@ -17,6 +17,7 @@ export default async function AccediPage({ searchParams }) {
   if (user) redirect(next);
 
   const linkError = params?.errore === "link";
+  const eliminato = params?.account === "eliminato";
 
   return (
     <main className="card">
@@ -26,6 +27,11 @@ export default async function AccediPage({ searchParams }) {
         Scrivi la tua email: ti mandiamo un link per entrare. Niente password da
         ricordare, e se è la prima volta l&apos;account si crea da solo.
       </p>
+      {eliminato && (
+        <p className="ok" role="status">
+          Il tuo account e tutti i tuoi dati sono stati eliminati. Grazie di aver provato Valigia Leggera.
+        </p>
+      )}
       {linkError && (
         <p className="alert" role="alert">
           Il link non è valido o è scaduto. Chiedine uno nuovo qui sotto, e aprilo

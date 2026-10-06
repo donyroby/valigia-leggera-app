@@ -76,3 +76,17 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .logout{margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
 @media (max-width:480px){.card{padding:26px 22px}h1{font-size:1.6rem}}
 @media print{body{background:#fff;padding:0;display:block;min-height:0}}
+
+/* I tuoi dati: scarica ed elimina */
+.dati{margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
+.dati h2{font-family:"Bricolage Grotesque Variable","Trebuchet MS",system-ui,sans-serif;font-size:1.2rem;margin:0 0 6px;color:var(--ink)}
+.dati .hint{font-size:.95rem}
+button.btn-secondario{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.link-button.danger{color:var(--danger)}
+.conferma{margin-top:18px;padding:16px 18px;border-radius:14px;border:1.5px solid var(--danger)}
+.conferma p{margin:0 0 12px;font-size:.95rem}
+.conferma label{display:block;font-weight:700;font-size:.9rem;color:var(--ink);margin-bottom:6px}
+.conferma input{font:inherit;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.conferma-azioni{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button.btn-pericolo{background:var(--danger);color:#fff;margin-top:0}
+button.btn-pericolo:disabled{opacity:.45;cursor:not-allowed}

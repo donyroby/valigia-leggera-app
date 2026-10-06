@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileForm from "./ProfileForm";
+import IMieiDati from "./IMieiDati";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Il tuo profilo · Valigia Leggera" };
@@ -35,6 +36,7 @@ export default async function ProfiloPage() {
       <p className="account-line">
         <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/salvadanaio">Salvadanaio</Link> · <Link href="/">Cerca un viaggio</Link>
       </p>
+      <IMieiDati email={user.email} />
       <form action="/auth/esci" method="post" className="logout">
         <button type="submit" className="link-button">
           Esci dall&apos;account
