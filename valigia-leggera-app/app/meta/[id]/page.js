@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
@@ -163,6 +164,7 @@ export default async function MetaPage({ params, searchParams }) {
           senza costi aggiuntivi per te.
         </p>
       </article>
+      <Footer />
     </div>
   );
 }

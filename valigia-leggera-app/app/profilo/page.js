@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
+import Footer from "@/components/Footer";
 import ProfileForm from "./ProfileForm";
 import IMieiDati from "./IMieiDati";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +22,7 @@ export default async function ProfiloPage() {
     .maybeSingle();
 
   return (
+    <>
     <main className="card">
       <Brand />
       <h1>Il tuo profilo</h1>
@@ -43,5 +45,7 @@ export default async function ProfiloPage() {
         </button>
       </form>
     </main>
+    <Footer />
+    </>
   );
 }

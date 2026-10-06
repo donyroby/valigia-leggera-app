@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Footer from "@/components/Footer";
 import s from "@/components/viaggi.module.css";
 import { DEPS, ALL } from "@/lib/viaggi/dati";
 import { fmt, fmtD, seasonLabel, todayISO, addDays, daysBetween } from "@/lib/viaggi/calcoli";
@@ -228,6 +229,7 @@ export default function Cerca() {
           I prezzi reali li trovi sui siti di prenotazione collegati.
         </p>
       </main>
+      <Footer />
     </div>
   );
 }

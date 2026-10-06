@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
@@ -138,6 +139,7 @@ export default function LowCost() {
       <div className={s.tips}>
         {SAVE_TIPS.map(([t, x]) => <div key={t} className={s.tip}><b>{t}</b><p>{x}</p></div>)}
       </div>
+      <Footer />
     </div>
   );
 }

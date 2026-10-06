@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
@@ -187,6 +188,7 @@ export default function Salvadanaio({ userId, initial, trips, defaultProfile }) 
         Mete e prezzi sono stime, non offerte reali, e valgono per una persona e un weekend breve ({NOTTI_SALVADANAIO} notti), con la partenza
         e il profilo dell&apos;ultima ricerca. Il salvadanaio è un promemoria: non muove denaro vero.
       </p>
+      <Footer />
     </div>
   );
 }

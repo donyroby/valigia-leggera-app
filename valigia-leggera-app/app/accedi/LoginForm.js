@@ -68,6 +68,10 @@ export default function LoginForm({ next = "/profilo" }) {
           {message}
         </p>
       )}
+      <p className="consenso">
+        Continuando dichiari di avere almeno 14 anni e di aver letto l&apos;<a href="/privacy">informativa privacy</a> e
+        i <a href="/termini">termini d&apos;uso</a>.
+      </p>
     </form>
   );
 }

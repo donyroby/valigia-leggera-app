@@ -90,3 +90,29 @@ button.btn-secondario{background:transparent;color:var(--ink);border:1.5px solid
 .conferma-azioni{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
 button.btn-pericolo{background:var(--danger);color:#fff;margin-top:0}
 button.btn-pericolo:disabled{opacity:.45;cursor:not-allowed}
+
+/* Pagine legali e piè di pagina */
+.card.legal{max-width:760px}
+.legal h1{font-size:2rem}
+.legal h2{font-family:"Bricolage Grotesque Variable","Trebuchet MS",system-ui,sans-serif;font-size:1.2rem;color:var(--ink);margin:26px 0 8px}
+.legal p,.legal li{font-size:1rem;line-height:1.6;color:var(--muted)}
+.legal ul{padding-left:20px;margin:8px 0}
+.legal li{margin:4px 0}
+.legal strong{color:var(--ink)}
+.legal a{color:var(--sea);font-weight:600}
+.legal-date{font-size:.9rem!important;margin:-4px 0 12px}
+.legal-bozza{background:#FFF4D6;color:#5A4300!important;border-radius:10px;padding:10px 14px;font-size:.92rem!important}
+.legal-table{overflow-x:auto;margin:10px 0}
+.legal-table table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+.legal-table th,.legal-table td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--muted)}
+.legal-table th{color:var(--ink)}
+.legal code{font-size:.85em;background:var(--bg);padding:1px 5px;border-radius:5px}
+.site-footer{width:100%;max-width:1040px;margin:28px auto 4px;padding:16px 0 0;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted);text-align:center}
+.site-footer nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin-bottom:6px}
+.site-footer a{color:var(--muted);font-weight:600;text-decoration:none}
+.site-footer a:hover{color:var(--ink);text-decoration:underline}
+.site-footer p{margin:0;font-size:.82rem;color:var(--muted)}
+.consenso{font-size:.85rem!important;margin:14px 0 0;color:var(--muted)}
+.consenso a{color:var(--sea);font-weight:600}
+@media (prefers-color-scheme:dark){.legal-bozza{background:#3A3000;color:#FFE7A3!important}}
+.legal a.brand{color:var(--ink);font-weight:800}

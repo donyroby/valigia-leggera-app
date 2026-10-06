@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Footer from "@/components/Footer";
 import { redirect } from "next/navigation";
 import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
@@ -73,6 +74,7 @@ export default async function ViaggiPage() {
           </div>
         ))}
       </div>
+      <Footer />
     </div>
   );
 }

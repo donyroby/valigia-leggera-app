@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
+import Footer from "@/components/Footer";
 import LoginForm from "./LoginForm";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,7 @@ export default async function AccediPage({ searchParams }) {
   const eliminato = params?.account === "eliminato";
 
   return (
+    <>
     <main className="card">
       <Brand />
       <h1>Accedi</h1>
@@ -40,5 +42,7 @@ export default async function AccediPage({ searchParams }) {
       )}
       <LoginForm next={next} />
     </main>
+    <Footer />
+    </>
   );
 }
