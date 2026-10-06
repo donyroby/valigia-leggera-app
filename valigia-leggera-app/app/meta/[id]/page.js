@@ -14,10 +14,26 @@ import { createClient } from "@/lib/supabase/server";
 const mapsUrl = (name, city) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + ", " + city);
 
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata({ params, searchParams }) {
   const { id } = await params;
   const d = ALL.find((x) => x.id === id);
-  return { title: d ? `${d.name} · Valigia Leggera` : "Meta non trovata · Valigia Leggera" };
+  if (!d) return { title: "Meta non trovata · Valigia Leggera" };
+  // Anteprima del link condiviso: meta, partenza, notti e costo stimato a persona
+  const p = daIndirizzo(await searchParams);
+  const r = calc(d, p);
+  const titolo = `Viaggio a ${d.name} · Valigia Leggera`;
+  const descrizione = `Da ${r.dep.n}, ${p.nights} ${p.nights === 1 ? "notte" : "notti"}, ${p.people} ${p.people === 1 ? "persona" : "persone"}: circa ${fmt(r.pp)} a persona (stima). Costi voce per voce, itinerario e link per prenotare.`;
+  return {
+    title: titolo,
+    description: descrizione,
+    // L'anteprima di una meta ridefinisce tutto il blocco: va ripetuta anche l'immagine comune
+    openGraph: {
+      type: "website", locale: "it_IT", siteName: "Valigia Leggera", url: `/meta/${d.id}`,
+      title: titolo, description: descrizione,
+      images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "Valigia Leggera: dove ti porta il tuo budget" }],
+    },
+    twitter: { card: "summary_large_image", title: titolo, description: descrizione, images: ["/opengraph-image.png"] },
+  };
 }
 
 export default async function MetaPage({ params, searchParams }) {
