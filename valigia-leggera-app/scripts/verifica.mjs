@@ -48,7 +48,9 @@ if (errors.length) { console.log(`DIFFERENZE: ${errors.length}`); console.log(er
 console.log("Nessuna differenza: i risultati dell'app sono identici a quelli del prototipo.");
 
 // 4. Ricerca completa: stesso elenco e stesso ordine del prototipo
-fs.writeFileSync(path.join(tmp, "ricerca.mjs"), fs.readFileSync(path.join(src, "ricerca.js"), "utf8").replace('from "./dati"', 'from "./dati.mjs"').replace('from "./calcoli"', 'from "./calcoli.mjs"'));
+fs.mkdirSync(path.join(tmp, "voli"), { recursive: true });
+for (const f of ["costoReale", "codici"]) fs.writeFileSync(path.join(tmp, "voli", f + ".mjs"), fs.readFileSync(path.resolve("lib/voli", f + ".js"), "utf8"));
+fs.writeFileSync(path.join(tmp, "ricerca.mjs"), fs.readFileSync(path.join(src, "ricerca.js"), "utf8").replace('from "./dati"', 'from "./dati.mjs"').replace('from "./calcoli"', 'from "./calcoli.mjs"').replace('from "../voli/costoReale"', 'from "./voli/costoReale.mjs"').replace('from "../voli/codici"', 'from "./voli/codici.mjs"'));
 const R = await import(path.join(tmp, "ricerca.mjs"));
 let rErr = 0, rChecks = 0;
 for (const dep of P.DEPS) for (const filter of R.FILTRI.map(([k]) => k)) for (const budget of [150, 300, 600]) for (const dest of ["tutte", "lis", "c_verona", ...(dep.ex ? [] : [])]) {

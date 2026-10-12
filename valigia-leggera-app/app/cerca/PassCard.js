@@ -24,7 +24,7 @@ export default function PassCard({ r, over, budget }) {
           {PARTS.map(([k, l, c]) => (
             <li key={k}>
               <i style={{ background: c }} />
-              {k === "trav" ? (d.mode === "treno" ? "Treno/bus" : "Volo") + " (~" + r.hrs + ")" : l} {fmt(parts[k])}
+              {k === "trav" ? (d.mode === "treno" ? "Treno/bus (~" + r.hrs + ")" : r.voloReale ? "Volo reale" : "Volo (~" + r.hrs + ", stima)") : l} {fmt(parts[k])}
             </li>
           ))}
         </ul>
@@ -32,6 +32,9 @@ export default function PassCard({ r, over, budget }) {
       </div>
       <div className={s.passStub}>
         <div className={s.pp}>{fmt(pp)}<small>a persona</small></div>
+        {r.voloReale && (
+          <div className={s.voloTag}>Volo vero da {fmt(r.voloReale.prezzo)} a/r{r.voloReale.tipo === "date_vicine" ? ", date vicine" : ""}</div>
+        )}
         <div className={s.tot}>{fmt(total)} per {p.people} {p.people === 1 ? "persona" : "persone"}, {p.nights} notti</div>
         <div className={`${s.status} ${diff <= 0 ? s.ok : s.no}`}>{diff <= 0 ? "Dentro il budget" : "+" + fmt(diff) + " oltre il budget"}</div>
         <Link className={s.btn} href={`/meta/${d.id}?${versoIndirizzo(p)}`}>Dettagli e itinerario</Link>

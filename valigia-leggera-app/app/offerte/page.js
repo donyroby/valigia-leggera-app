@@ -66,7 +66,7 @@ export default async function OffertePage({ searchParams }) {
         senzaToken={!tokenPresente()}
       />
       <p className={s.fine}>
-        I prezzi sono quelli trovati negli ultimi giorni dagli utenti di Aviasales, a persona e andata e ritorno: possono
+        I prezzi sono quelli trovati negli ultimi giorni dagli utenti di Aviasales, a persona e andata e ritorno, di solito con il solo bagaglio a mano piccolo (il bagaglio da stiva si paga a parte): possono
         cambiare fino al momento della prenotazione. Mostriamo solo le mete di Valigia Leggera, con partenze nei prossimi tre
         mesi e soggiorni da 2 a 10 notti. &quot;Calcola il viaggio&quot; apre la scheda con alloggio, pasti e attività stimati per 2 persone.
       </p>

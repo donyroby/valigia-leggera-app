@@ -136,7 +136,7 @@ export default async function MetaPage({ params, searchParams }) {
               {reale.tipo === "date_esatte"
                 ? `per le tue date, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`
                 : `per date vicine alle tue, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`}.
-              {" "}È un prezzo trovato di recente su Aviasales: può cambiare fino alla prenotazione.
+              {" "}È un prezzo trovato di recente su Aviasales, con il solo bagaglio a mano piccolo: il bagaglio da stiva di solito si paga a parte, e il prezzo può cambiare fino alla prenotazione.
               {inAereo ? " Le altre voci sono stime." : " Il costo qui sopra resta calcolato sul treno."}
             </p>
             <a className={`${s.btn} ${s.sun}`} href={linkVolo} target="_blank" rel="noopener noreferrer sponsored">Vedi questo volo su Aviasales</a>

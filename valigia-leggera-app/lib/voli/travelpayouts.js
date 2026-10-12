@@ -7,13 +7,8 @@
 const API = process.env.TRAVELPAYOUTS_API_URL || "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
 const CACHE_SECONDI = 6 * 60 * 60; // ogni rotta viene richiesta al massimo ogni 6 ore
 
-// Per le grandi città Aviasales ragiona per codice città (più aeroporti insieme, più offerte).
-// I nostri dati usano spesso il codice dell'aeroporto principale: qui li traduciamo.
-const CITTA = {
-  CDG: "PAR", FCO: "ROM", MXP: "MIL", BGY: "MIL", LHR: "LON", JFK: "NYC", NRT: "TYO", GIG: "RIO",
-  EZE: "BUE", ICN: "SEL", PEK: "BJS", ARN: "STO", OTP: "BUH", TFS: "TCI", YYZ: "YTO",
-};
-export const codiceCitta = (iata) => CITTA[iata] || iata;
+import { codiceCitta } from "./codici";
+export { codiceCitta };
 
 export const tokenPresente = () => Boolean(process.env.TRAVELPAYOUTS_TOKEN);
 
@@ -75,4 +70,28 @@ export async function voloPerDate({ da, a, andata, ritorno }) {
 export async function offerteDa(da, mese) {
   const r = await chiama({ origin: da, departure_at: mese, return_at: mese, one_way: "false", unique: "true", limit: "100" });
   return { ok: r.ok, motivo: r.motivo, voli: r.data.map(normalizza).filter(Boolean) };
+}
+
+// Voli reali verso tutte le destinazioni, per una partenza e delle date: una sola richiesta per le
+// date esatte, una per lo stesso mese (per le date vicine: ±2 notti, partenza entro 7 giorni).
+// Restituisce una mappa { codice aeroporto o città: volo } con il volo più economico per ciascuna.
+export async function voliPerRicerca({ da, andata, ritorno }) {
+  const n = notti(andata, ritorno);
+  const [esatte, mese] = await Promise.all([
+    chiama({ origin: da, departure_at: andata, return_at: ritorno, one_way: "false", unique: "true", limit: "1000" }),
+    chiama({ origin: da, departure_at: andata.slice(0, 7), return_at: ritorno.slice(0, 7), one_way: "false", limit: "1000" }),
+  ]);
+  const mappa = {};
+  const metti = (v, tipo) => {
+    for (const k of [v.destinazione, v.cittaDestinazione]) {
+      if (!k) continue;
+      const prima = mappa[k];
+      if (!prima || (prima.tipo !== "date_esatte" && (tipo === "date_esatte" || v.prezzo < prima.prezzo))) mappa[k] = { ...v, tipo };
+    }
+  };
+  esatte.data.map(normalizza).filter(Boolean).forEach((v) => metti(v, "date_esatte"));
+  mese.data.map(normalizza).filter(Boolean)
+    .filter((v) => v.andata && v.ritorno && Math.abs(notti(v.andata, v.ritorno) - n) <= 2 && Math.abs(notti(andata, v.andata)) <= 7)
+    .forEach((v) => metti(v, "date_vicine"));
+  return { ok: esatte.ok || mese.ok, motivo: esatte.ok ? null : esatte.motivo, voli: mappa };
 }

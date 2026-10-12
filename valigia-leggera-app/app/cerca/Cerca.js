@@ -47,7 +47,28 @@ export default function Cerca() {
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
   }, [st]);
 
-  const res = useMemo(() => (st ? cerca(st) : null), [st]);
+  // Prezzi reali dei voli per partenza e date scelte (dal nostro server, in cache per 6 ore)
+  const [voli, setVoli] = useState({ chiave: null, stato: "idle", mappa: null });
+  const chiaveVoli = st ? `${st.from}|${st.date}|${st.ret}` : null;
+  useEffect(() => {
+    if (!st || !chiaveVoli) return;
+    const ctl = new AbortController();
+    setVoli((v) => ({ chiave: chiaveVoli, stato: "carico", mappa: v.chiave === chiaveVoli ? v.mappa : null }));
+    const t = setTimeout(async () => {
+      try {
+        const q = new URLSearchParams({ da: st.from, andata: st.date, ritorno: st.ret });
+        const r = await fetch(`/api/voli-ricerca?${q}`, { signal: ctl.signal });
+        const j = await r.json();
+        setVoli({ chiave: chiaveVoli, stato: j.ok ? "ok" : "errore", mappa: j.ok ? j.voli || {} : null });
+      } catch (e) {
+        if (e?.name !== "AbortError") setVoli({ chiave: chiaveVoli, stato: "errore", mappa: null });
+      }
+    }, 350);
+    return () => { clearTimeout(t); ctl.abort(); };
+  }, [chiaveVoli]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mappaVoli = voli.chiave === chiaveVoli ? voli.mappa : null;
+  const res = useMemo(() => (st ? cerca(st, mappaVoli) : null), [st, mappaVoli]);
 
   if (!st) return <div className={s.page} aria-busy="true" />;
 
@@ -89,7 +110,7 @@ export default function Cerca() {
           Scegli da dove parti, le date e quanto vuoi spendere a persona. Hai già una città in mente?
           Scrivila e vedi il costo del viaggio. Altrimenti lasciati ispirare dalle mete che stanno nel tuo budget.
         </p>
-        <span className={s.demo}>Prezzi stimati: il volo reale lo trovi nella scheda di ogni meta</span>
+        <span className={s.demo}>Voli con prezzi reali, il resto stimato</span>
       </section>
 
       <form className={s.panel} aria-label="Parametri del viaggio" onSubmit={vaiAiRisultati}>
@@ -192,6 +213,8 @@ export default function Cerca() {
           <h2>{titolo}</h2>
           <span>
             Da {dep.n} · {fmtD(st.date)} - {fmtD(st.ret)} ({st.nights} {st.nights === 1 ? "notte" : "notti"}) · {seasonLabel(st.date)} · prezzi a persona
+            {voli.stato === "carico" && " · cerco i prezzi reali dei voli…"}
+            {voli.stato === "ok" && " · voli con prezzi reali dove disponibili"}
           </span>
         </div>
 

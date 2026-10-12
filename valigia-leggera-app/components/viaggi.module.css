@@ -290,3 +290,4 @@
 .offerta .qlinks .btn{display:flex;align-items:center;justify-content:center;border:1px solid transparent;line-height:1.25}
 .offerta .qlinks .ghost{border-color:var(--line)}
 .page .offerta .price{color:var(--ink)}
+.voloTag{font-size:.8rem;font-weight:700;color:var(--sea)}

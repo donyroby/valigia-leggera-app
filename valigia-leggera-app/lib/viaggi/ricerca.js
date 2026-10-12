@@ -1,6 +1,8 @@
 // Logica della pagina di ricerca, presa da renderSearch del prototipo,
 // separata dalla parte grafica.
 import { DEPS, ALL, norm } from "./dati";
+import { conVoloReale } from "../voli/costoReale";
+import { voloDellaMeta } from "../voli/codici";
 import { calc, usable, isHere, todayISO, addDays, daysBetween, defaultDate } from "./calcoli";
 
 export const DEFAULT_PEOPLE = { amici: 3, coppia: 2, famiglia: 4 };
@@ -56,16 +58,18 @@ export function suggerimenti(testo) {
 }
 
 // Risultati della ricerca: stessa logica e stesso ordine del prototipo
-export function cerca(st) {
+// voli (facoltativo): prezzi reali dal server. Senza, la ricerca è identica al prototipo.
+export function cerca(st, voli) {
+  const conta = (r) => (voli && r.d.mode === "volo" ? conVoloReale(r, voloDellaMeta(voli, r.d)) : r);
   const f = st.filter;
   const list = usable(st).filter((d) => f === "tutte" || (f === "italia" ? d.it : f === "europa" ? !d.it : d.tags.includes(f)));
   let chosen = null, notFound = false;
   if (st.dest === "?") notFound = true;
   else if (st.dest !== "tutte") {
     const cd = ALL.find((x) => x.id === st.dest);
-    chosen = cd && !isHere(cd, st.from) ? calc(cd, st) : false;
+    chosen = cd && !isHere(cd, st.from) ? conta(calc(cd, st)) : false;
   }
-  const rs = list.filter((d) => !(chosen && d.id === chosen.d.id)).map((d) => calc(d, st)).sort((a, b) => a.pp - b.pp);
+  const rs = list.filter((d) => !(chosen && d.id === chosen.d.id)).map((d) => conta(calc(d, st))).sort((a, b) => a.pp - b.pp);
   const inb = rs.filter((r) => r.pp <= st.budget), over = rs.filter((r) => r.pp > st.budget);
   const titolo = notFound ? "Città non trovata"
     : chosen ? "Il tuo viaggio a " + chosen.d.name
