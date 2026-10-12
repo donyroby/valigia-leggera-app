@@ -10,7 +10,7 @@ export default function Footer() {
         <Link href="/termini">Termini d&apos;uso</Link>
         <Link href="/affiliazioni">Link di affiliazione</Link>
       </nav>
-      <p>© 2026 Valigia Leggera · Prezzi stimati, non offerte reali</p>
+      <p>© 2026 Valigia Leggera · Voli: prezzi trovati su Aviasales · Altri costi stimati</p>
     </footer>
   );
 }

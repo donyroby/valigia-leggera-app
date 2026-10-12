@@ -89,7 +89,7 @@ export default function Cerca() {
           Scegli da dove parti, le date e quanto vuoi spendere a persona. Hai già una città in mente?
           Scrivila e vedi il costo del viaggio. Altrimenti lasciati ispirare dalle mete che stanno nel tuo budget.
         </p>
-        <span className={s.demo}>Prezzi stimati, non ancora reali</span>
+        <span className={s.demo}>Prezzi stimati: il volo reale lo trovi nella scheda di ogni meta</span>
       </section>
 
       <form className={s.panel} aria-label="Parametri del viaggio" onSubmit={vaiAiRisultati}>

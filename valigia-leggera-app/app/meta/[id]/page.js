@@ -6,7 +6,10 @@ import TopBar from "@/components/TopBar";
 import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
 import { ALL } from "@/lib/viaggi/dati";
-import { calc, links, itinerary, fmt, seasonLabel, isHere } from "@/lib/viaggi/calcoli";
+import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
+import { voloPerDate, codiceCitta } from "@/lib/voli/travelpayouts";
+import { conVoloReale } from "@/lib/voli/costoReale";
+import { nomeCompagnia } from "@/lib/voli/compagnie";
 import { etichetta } from "@/lib/viaggi/condividi";
 import { daIndirizzo, budgetDaIndirizzo, versoIndirizzo, stessoViaggio } from "@/lib/viaggi/parametri";
 import { createClient } from "@/lib/supabase/server";
@@ -44,8 +47,23 @@ export default async function MetaPage({ params, searchParams }) {
 
   const p = daIndirizzo(sp);
   const budget = budgetDaIndirizzo(sp);
-  const r = calc(d0, p);
+  const stima = calc(d0, p);
+
+  // Volo reale (dati Aviasales): sostituisce la stima del trasporto quando il viaggio è in aereo.
+  // Se non arriva nulla (token mancante, nessun volo, errore), resta la stima come prima.
+  let reale = null;
+  if (stima.t.canFly && !isHere(d0, p.from)) {
+    reale = await voloPerDate({ da: p.from, a: d0.iata, andata: p.date, ritorno: addDays(p.date, p.nights) });
+  }
+  const volo = reale && reale.ok ? reale.volo : null;
+  const inAereo = stima.d.mode === "volo";
+  const r = inAereo && volo ? conVoloReale(stima, volo) : stima;
   const { d, parts, total, pp } = r;
+  const scali = (n) => (n == null ? "" : n === 0 ? "diretto" : n === 1 ? "1 scalo" : n + " scali");
+  const dettaglioVolo = volo
+    ? [nomeCompagnia(volo.compagnia), scali(volo.scaliAndata)].filter(Boolean).join(" · ")
+    : "";
+  const linkVolo = volo ? aviasalesUrl(p.from, codiceCitta(d0.iata), volo.andata, volo.ritorno, p.people) : null;
   const L = links(r);
   const it = itinerary(r);
   const qs = versoIndirizzo({ ...p, budget: budget ?? undefined });
@@ -63,7 +81,11 @@ export default async function MetaPage({ params, searchParams }) {
 
   const trLabel = d.mode === "treno" ? "Treno o bus, andata e ritorno" : "Volo andata e ritorno";
   const rows = [
-    [trLabel, "da " + r.dep.n + ", " + p.people + " pers. · circa " + r.hrs, parts.trav],
+    [inAereo && volo ? "Volo andata e ritorno · prezzo reale" : trLabel,
+      inAereo && volo
+        ? "da " + r.dep.n + ", " + p.people + " pers. × " + fmt(volo.prezzo) + (dettaglioVolo ? " · " + dettaglioVolo : "")
+        : "da " + r.dep.n + ", " + p.people + " pers. · circa " + r.hrs + " · stima",
+      parts.trav],
     [r.lodgLabel, p.nights + " notti · " + seasonLabel(p.date), parts.lodg],
     ["Pasti e cibo", p.nights + 1 + " giorni", parts.food],
     ["Spostamenti locali", "mezzi pubblici e taxi occasionali", parts.trans],
@@ -106,6 +128,23 @@ export default async function MetaPage({ params, searchParams }) {
             <tr className={s.sum}><td>Totale<small>{fmt(pp)} a persona</small></td><td>{fmt(total)}</td></tr>
           </tbody>
         </table>
+        {volo && (
+          <div className={s.voloReale}>
+            <p>
+              <strong>{inAereo ? "Volo: prezzo reale" : "In aereo, prezzo reale"}</strong>{" "}
+              {fmt(volo.prezzo)} a persona andata e ritorno{dettaglioVolo ? ` (${dettaglioVolo})` : ""},{" "}
+              {reale.tipo === "date_esatte"
+                ? `per le tue date, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`
+                : `per date vicine alle tue, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`}.
+              {" "}È un prezzo trovato di recente su Aviasales: può cambiare fino alla prenotazione.
+              {inAereo ? " Le altre voci sono stime." : " Il costo qui sopra resta calcolato sul treno."}
+            </p>
+            <a className={`${s.btn} ${s.sun}`} href={linkVolo} target="_blank" rel="noopener noreferrer sponsored">Vedi questo volo su Aviasales</a>
+          </div>
+        )}
+        {!volo && stima.t.canFly && inAereo && (
+          <p className={s.fine}>Per questa tratta e queste date non abbiamo ancora un prezzo reale del volo: il trasporto è stimato.</p>
+        )}
         {budget != null && (
           <p className={`${s.status} ${pp <= budget ? s.ok : s.no}`}>
             {pp <= budget ? `Dentro il tuo budget di ${fmt(budget)} a persona` : `${fmt(pp - budget)} oltre il tuo budget di ${fmt(budget)} a persona`}

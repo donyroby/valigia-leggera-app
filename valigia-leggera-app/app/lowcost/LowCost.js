@@ -61,6 +61,11 @@ export default function LowCost() {
         <span>Da {dep.n} · {base.people} {base.people === 1 ? "persona" : "persone"} · <Link href="/">cambia nella ricerca</Link></span>
       </div>
 
+      <div className={s.offerteBanner}>
+        <p><strong>Novità: voli con prezzi veri.</strong> Le partenze più economiche trovate di recente dal tuo aeroporto.</p>
+        <Link className={`${s.btn} ${s.sun}`} href={`/offerte?da=${base.from}`}>Offerte della settimana</Link>
+      </div>
+
       <div className={s.lcToolbar}>
         <div className={s.field}>
           <label htmlFor="lcMonth">Mese</label>
