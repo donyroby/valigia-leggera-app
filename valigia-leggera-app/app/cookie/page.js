@@ -11,6 +11,12 @@ export default function Cookie() {
         pubblicitari, di profilazione o di statistica, e non carichiamo contenuti di terze parti che ne installano (anche i
         caratteri tipografici sono ospitati sul nostro sito). Per questo non ti chiediamo il consenso con un banner.
       </p>
+      <p>
+        Le visite al sito vengono contate con <strong>GoatCounter</strong>, che non usa cookie né memoria del browser e non
+        conserva indirizzi IP: produce solo numeri aggregati (quante visite ha avuto una pagina). Gli errori tecnici vengono
+        segnalati con <strong>Sentry</strong>, senza cookie di statistica né dati personali. Maggiori dettagli
+        nell&apos;<Link href="/privacy">informativa privacy</Link>.
+      </p>
 
       <h2>Cosa usiamo</h2>
       <div className="legal-table">
@@ -48,7 +54,7 @@ export default function Cookie() {
         di accesso dovrai solo chiedere un nuovo link per entrare.
       </p>
       <p>
-        Se in futuro aggiungeremo strumenti non tecnici, come statistiche di terze parti, aggiorneremo questa pagina e, dove
+        Se in futuro aggiungeremo altri strumenti, come statistiche che usano cookie, aggiorneremo questa pagina e, dove
         richiesto, chiederemo il tuo consenso prima di attivarli.
       </p>
       <p>Vedi anche: <Link href="/privacy">Informativa privacy</Link>.</p>

@@ -7,7 +7,8 @@ import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
 import { ALL } from "@/lib/viaggi/dati";
 import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
-import { voloPerDate, codiceCitta } from "@/lib/voli/travelpayouts";
+import { voloPerDate, voliPerRicerca, codiceCitta } from "@/lib/voli/travelpayouts";
+import { voloDellaMeta } from "@/lib/voli/codici";
 import { conVoloReale } from "@/lib/voli/costoReale";
 import { nomeCompagnia } from "@/lib/voli/compagnie";
 import { etichetta } from "@/lib/viaggi/condividi";
@@ -53,7 +54,21 @@ export default async function MetaPage({ params, searchParams }) {
   // Se non arriva nulla (token mancante, nessun volo, errore), resta la stima come prima.
   let reale = null;
   if (stima.t.canFly && !isHere(d0, p.from)) {
-    reale = await voloPerDate({ da: p.from, a: d0.iata, andata: p.date, ritorno: addDays(p.date, p.nights) });
+    // Stessa richiesta della pagina di ricerca (già in memoria): così scheda e risultati mostrano
+    // lo stesso volo. Se lì non c'è, si chiede la singola tratta.
+    const ritorno = addDays(p.date, p.nights);
+    const [tutti, tratta] = await Promise.all([
+      voliPerRicerca({ da: p.from, andata: p.date, ritorno }),
+      voloPerDate({ da: p.from, a: d0.iata, andata: p.date, ritorno }),
+    ]);
+    const daRicerca = tutti.ok ? voloDellaMeta(tutti.voli, d0) : null;
+    const candidati = [
+      daRicerca && { ok: true, tipo: daRicerca.tipo, volo: daRicerca },
+      tratta.ok && tratta.volo && tratta,
+    ].filter(Boolean);
+    // Prima le date esatte, poi il prezzo più basso
+    candidati.sort((x, y) => (x.tipo === "date_esatte" ? 0 : 1) - (y.tipo === "date_esatte" ? 0 : 1) || x.volo.prezzo - y.volo.prezzo);
+    reale = candidati[0] || tratta;
   }
   const volo = reale && reale.ok ? reale.volo : null;
   const inAereo = stima.d.mode === "volo";

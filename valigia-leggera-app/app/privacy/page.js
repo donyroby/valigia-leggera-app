@@ -32,11 +32,18 @@ export default function Privacy() {
         Le ultime scelte della ricerca vengono ricordate solo nel tuo browser, per comodità, e non ci vengono inviate.
         Non raccogliamo dati di pagamento, non usiamo strumenti di profilazione pubblicitaria e non vendiamo dati a nessuno.
       </p>
+      <p>
+        Per capire quanto viene usato il sito contiamo le visite in forma <strong>anonima e aggregata</strong> (pagina vista,
+        sito di provenienza, Paese, tipo di browser e di dispositivo), senza cookie e senza conservare indirizzi IP. Se una pagina
+        va in errore, registriamo i dettagli tecnici dell&apos;errore (pagina, browser, messaggio di errore) per poterlo
+        correggere, senza indirizzo IP, senza email e senza i parametri della ricerca.
+      </p>
 
       <h2>Perché li usiamo e su quale base</h2>
       <ul>
         <li><strong>Fornirti il servizio</strong> che hai chiesto (account, viaggi salvati, salvadanaio, email di accesso): base giuridica l&apos;esecuzione del servizio richiesto (art. 6.1.b GDPR).</li>
         <li><strong>Sicurezza e prevenzione degli abusi</strong> (registri tecnici, limiti all&apos;invio delle email): legittimo interesse a proteggere il servizio e gli utenti (art. 6.1.f).</li>
+        <li><strong>Statistiche anonime e correzione degli errori</strong>: legittimo interesse a capire come viene usato il sito e a farlo funzionare bene (art. 6.1.f).</li>
         <li><strong>Obblighi di legge</strong>, se e quando applicabili (art. 6.1.c).</li>
       </ul>
       <p>
@@ -50,6 +57,8 @@ export default function Privacy() {
         <li><strong>Supabase</strong>: database e sistema di accesso, con i dati conservati su server in Irlanda (Unione europea).</li>
         <li><strong>Netlify</strong>: hosting del sito, con sede negli Stati Uniti. Gli eventuali trasferimenti fuori dall&apos;Unione europea avvengono sulla base delle garanzie previste dal GDPR, come le decisioni di adeguatezza o le clausole contrattuali standard.</li>
         <li><strong>Brevo</strong>: invio delle email di accesso, azienda con sede in Francia (Unione europea).</li>
+        <li><strong>GoatCounter</strong>: statistiche anonime delle visite, senza cookie, con i dati conservati su server in Germania e Finlandia (Unione europea).</li>
+        <li><strong>Sentry</strong> (Functional Software Inc., Stati Uniti): segnalazione degli errori tecnici del sito, con i dati conservati su server nell&apos;Unione europea (Germania).</li>
       </ul>
 
       <h2>Link ai siti partner</h2>

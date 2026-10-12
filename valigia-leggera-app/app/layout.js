@@ -1,6 +1,7 @@
 import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/dm-sans";
 import "./globals.css";
+import Statistiche from "@/components/Statistiche";
 
 const SITO = "https://valigialeggera.it";
 const TITOLO = "Valigia Leggera · Dove ti porta il tuo budget?";
@@ -33,7 +34,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="it">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Statistiche />
+      </body>
     </html>
   );
 }
