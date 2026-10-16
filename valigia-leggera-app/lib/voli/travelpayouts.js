@@ -95,3 +95,39 @@ export async function voliPerRicerca({ da, andata, ritorno }) {
     .forEach((v) => metti(v, "date_vicine"));
   return { ok: esatte.ok || mese.ok, motivo: esatte.ok ? null : esatte.motivo, voli: mappa };
 }
+
+// Quando manca un andata e ritorno: somma il volo di sola andata più economico verso la meta
+// e quello di ritorno, ciascuno nel giorno scelto o fino a 3 giorni prima/dopo.
+// Le sole andate sono cercate molto più spesso, quindi coprono molte più date (anche i viaggi lunghi).
+async function solaAndata(da, a, giornoVoluto) {
+  const sposta = (g) => Math.abs(notti(giornoVoluto, g));
+  const esatto = await chiama({ origin: da, destination: a, departure_at: giornoVoluto, one_way: "true", limit: "5" });
+  const primo = esatto.data.map(normalizza).filter(Boolean).sort((x, y) => x.prezzo - y.prezzo)[0];
+  if (primo) return primo;
+  if (!esatto.ok) return null;
+  const mese = await chiama({ origin: da, destination: a, departure_at: giornoVoluto.slice(0, 7), one_way: "true", limit: "100" });
+  return mese.data.map(normalizza).filter(Boolean)
+    .filter((v) => v.andata && sposta(v.andata) <= 3)
+    .sort((x, y) => x.prezzo - y.prezzo)[0] || null;
+}
+
+export async function dueSoleAndate({ da, a, andata, ritorno }) {
+  const dest = codiceCitta(a);
+  const [va, torna] = await Promise.all([solaAndata(da, dest, andata), solaAndata(dest, da, ritorno)]);
+  if (!va || !torna || torna.andata <= va.andata) return { ok: false, motivo: "nessun_volo" };
+  const esatte = va.andata === andata && torna.andata === ritorno;
+  return {
+    ok: true,
+    tipo: "sole_andate",
+    dateEsatte: esatte,
+    volo: {
+      prezzo: va.prezzo + torna.prezzo,
+      andata: va.andata, ritorno: torna.andata,
+      compagnia: va.compagnia === torna.compagnia ? va.compagnia : null,
+      compagnie: [va.compagnia, torna.compagnia],
+      scaliAndata: va.scaliAndata, scaliRitorno: torna.scaliAndata,
+      prezzoAndata: va.prezzo, prezzoRitorno: torna.prezzo,
+      origine: va.origine, destinazione: va.destinazione, cittaDestinazione: va.cittaDestinazione,
+    },
+  };
+}

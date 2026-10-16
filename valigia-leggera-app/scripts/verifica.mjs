@@ -9,20 +9,28 @@ const protoFile = process.argv[2];
 if (!protoFile) { console.error("Indica il file del prototipo"); process.exit(2); }
 
 // 1. Prototipo: carico dati e calcoli (righe fino a usableAll) in un ambiente isolato
-const lines = fs.readFileSync(protoFile, "utf8").split("\n");
+// Il prototipo usa i dati dell'app (comprese le mete aggiunte dopo), così si confronta solo la logica di calcolo.
+// Le uniche modifiche alla logica sono le mete "solo in aereo" (nt) e quelle "fuori Europa a corto raggio" (breve).
+const lines = fs.readFileSync(protoFile, "utf8")
+  .replace("const ALL=DESTS.concat(CITIES).concat(WORLD);", "const ALL=globalThis.__APP.ALL;DESTS.length=0;DESTS.push(...globalThis.__APP.DESTS);")
+  .replace("  if(d.world){", "  if(d.world&&!d.breve){")
+  .replace("const isl=ISL_FORCE.includes(d.iata)||islandOf", "const isl=ISL_FORCE.includes(d.iata)||d.nt||islandOf")
+  .split("\n");
 const end = lines.findIndex(l => l.startsWith("const usableAll"));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vl-"));
+const src = path.resolve("lib/viaggi");
+fs.writeFileSync(path.join(tmp, "mete-europa.mjs"), fs.readFileSync(path.join(src, "mete-europa.js"), "utf8"));
+fs.writeFileSync(path.join(tmp, "dati.mjs"), fs.readFileSync(path.join(src, "dati.js"), "utf8").replace('from "./mete-europa"', 'from "./mete-europa.mjs"'));
+const ND = await import(path.join(tmp, "dati.mjs"));
+globalThis.__APP = ND;
 const store = {};
-const ctx = vm.createContext({ localStorage: { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } }, console });
+const ctx = vm.createContext({ localStorage: { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } }, console, __APP: ND });
 vm.runInContext(lines.slice(0, end + 1).join("\n") + "\n;globalThis.P={DEPS,ALL,DESTS,calc,links,itinerary,usable,state,seasonLabel,isHere};", ctx);
 const P = ctx.P;
 
 // 2. App: copio i moduli in una cartella temporanea con le estensioni che Node richiede
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vl-"));
-const src = path.resolve("lib/viaggi");
-fs.writeFileSync(path.join(tmp, "dati.mjs"), fs.readFileSync(path.join(src, "dati.js"), "utf8"));
 fs.writeFileSync(path.join(tmp, "calcoli.mjs"), fs.readFileSync(path.join(src, "calcoli.js"), "utf8").replace('from "./dati"', 'from "./dati.mjs"'));
 const N = await import(path.join(tmp, "calcoli.mjs"));
-const ND = await import(path.join(tmp, "dati.mjs"));
 
 // 3. Confronto su tante combinazioni
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -57,7 +65,7 @@ for (const dep of P.DEPS) for (const filter of R.FILTRI.map(([k]) => k)) for (co
   const st = { ...R.statoIniziale(), from: dep.id, filter, budget, dest, date: "2026-11-13", ret: "2026-11-16", nights: 3 };
   const res = R.cerca(st);
   // riferimento: stessa sequenza di renderSearch nel prototipo
-  const list = P.usable(st).filter(d => filter === "tutte" || (filter === "italia" ? d.it : filter === "europa" ? !d.it : d.tags.includes(filter)));
+  const list = P.usable(st).filter(d => filter === "tutte" || (filter === "italia" ? d.it : filter === "europa" ? !d.it && !d.world : d.tags.includes(filter)));
   let chosen = null; if (dest !== "tutte") { const cd = P.ALL.find(x => x.id === dest); P.state.from = dep.id; chosen = cd && !P.isHere(cd) ? P.calc(cd, st) : false; }
   const rs = list.filter(d => !(chosen && d.id === chosen.d.id)).map(d => P.calc(d, st)).sort((a, b) => a.pp - b.pp);
   const ids = x => x.map(r => r.d.id).join(",");
@@ -70,7 +78,7 @@ if (rErr) process.exit(1);
 // 5. Low cost: stesse proposte del mese del prototipo
 {
   const end2 = lines.findIndex(l => l.startsWith("const $="));
-  const ctx2 = vm.createContext({ localStorage: { getItem: () => null, setItem: () => {} }, console });
+  const ctx2 = vm.createContext({ localStorage: { getItem: () => null, setItem: () => {} }, console, __APP: ND });
   vm.runInContext(lines.slice(0, end2).join("\n") + "\n;globalThis.Q={contList,state,DEPS};", ctx2);
   const Q = ctx2.Q;
   fs.writeFileSync(path.join(tmp, "lowcost.mjs"), fs.readFileSync(path.join(src, "lowcost.js"), "utf8").replace('from "./dati"', 'from "./dati.mjs"').replace('from "./calcoli"', 'from "./calcoli.mjs"'));

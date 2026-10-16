@@ -62,7 +62,7 @@ export function suggerimenti(testo) {
 export function cerca(st, voli) {
   const conta = (r) => (voli && r.d.mode === "volo" ? conVoloReale(r, voloDellaMeta(voli, r.d)) : r);
   const f = st.filter;
-  const list = usable(st).filter((d) => f === "tutte" || (f === "italia" ? d.it : f === "europa" ? !d.it : d.tags.includes(f)));
+  const list = usable(st).filter((d) => f === "tutte" || (f === "italia" ? d.it : f === "europa" ? !d.it && !d.world : d.tags.includes(f)));
   let chosen = null, notFound = false;
   if (st.dest === "?") notFound = true;
   else if (st.dest !== "tutte") {

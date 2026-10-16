@@ -9,11 +9,11 @@ const islandOf=id=>["PMO","CTA","TPS"].includes(id)?"si":["CAG","OLB","AHO"].inc
 const fmtH=h=>{let hh=Math.floor(h),mm=Math.round((h-hh)*2)*30;if(mm===60){hh++;mm=0}return hh+" h"+(mm?" 30":"")};
 function travelOpt(d,dep,pref){
   const km=hav(dep.lat,dep.lon,d.lat,d.lon);
-  if(d.world){
+  if(d.world&&!d.breve){ // intercontinentale; le mete "breve" (es. Tunisi) usano la stima europea
     const cost=90+0.045*km,hrs=fmtH(2+km/800);
     return {mode:"volo",cost,km,canTrain:false,canFly:true,hrs,note:"Stima per un volo intercontinentale, spesso con uno scalo: orari e scali variano molto, verificali sempre prima di prenotare."};
   }
-  const isl=ISL_FORCE.includes(d.iata)||islandOf(dep.id)!==islandOf(d.iata);
+  const isl=ISL_FORCE.includes(d.iata)||d.nt||islandOf(dep.id)!==islandOf(d.iata);
   const canTrain=!isl&&km<=1400,canFly=isl||km>=250;
   const trainCost=Math.max(12,10+0.16*km),flyCost=Math.max(45,30+0.03*km);
   let mode,note="";

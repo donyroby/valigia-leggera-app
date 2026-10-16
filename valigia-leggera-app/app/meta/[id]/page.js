@@ -7,7 +7,7 @@ import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
 import { ALL } from "@/lib/viaggi/dati";
 import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
-import { voloPerDate, voliPerRicerca, codiceCitta } from "@/lib/voli/travelpayouts";
+import { voloPerDate, voliPerRicerca, dueSoleAndate, codiceCitta } from "@/lib/voli/travelpayouts";
 import { voloDellaMeta } from "@/lib/voli/codici";
 import { conVoloReale } from "@/lib/voli/costoReale";
 import { nomeCompagnia } from "@/lib/voli/compagnie";
@@ -69,16 +69,30 @@ export default async function MetaPage({ params, searchParams }) {
     // Prima le date esatte, poi il prezzo più basso
     candidati.sort((x, y) => (x.tipo === "date_esatte" ? 0 : 1) - (y.tipo === "date_esatte" ? 0 : 1) || x.volo.prezzo - y.volo.prezzo);
     reale = candidati[0] || tratta;
+    // Nessun andata e ritorno: proviamo con due voli di sola andata
+    if (!(reale && reale.ok && reale.volo)) {
+      const singoli = await dueSoleAndate({ da: p.from, a: d0.iata, andata: p.date, ritorno });
+      if (singoli.ok) reale = singoli;
+    }
   }
   const volo = reale && reale.ok ? reale.volo : null;
   const inAereo = stima.d.mode === "volo";
   const r = inAereo && volo ? conVoloReale(stima, volo) : stima;
   const { d, parts, total, pp } = r;
   const scali = (n) => (n == null ? "" : n === 0 ? "diretto" : n === 1 ? "1 scalo" : n + " scali");
-  const dettaglioVolo = volo
-    ? [nomeCompagnia(volo.compagnia), scali(volo.scaliAndata)].filter(Boolean).join(" · ")
-    : "";
+  const soleAndate = reale?.tipo === "sole_andate";
+  const dettaglioVolo = !volo ? ""
+    : soleAndate
+      ? "2 voli di sola andata"
+      : [nomeCompagnia(volo.compagnia), scali(volo.scaliAndata)].filter(Boolean).join(" · ");
   const linkVolo = volo ? aviasalesUrl(p.from, codiceCitta(d0.iata), volo.andata, volo.ritorno, p.people) : null;
+  // Senza prezzo reale: link alla ricerca di oggi su Aviasales per le date scelte
+  const linkVerifica = !volo && stima.t.canFly && !isHere(d0, p.from)
+    ? aviasalesUrl(p.from, codiceCitta(d0.iata), p.date, addDays(p.date, p.nights), p.people)
+    : null;
+  const nomiSoleAndate = soleAndate
+    ? volo.compagnie.map((c) => nomeCompagnia(c)).filter(Boolean)
+    : [];
   const L = links(r);
   const it = itinerary(r);
   const qs = versoIndirizzo({ ...p, budget: budget ?? undefined });
@@ -148,9 +162,10 @@ export default async function MetaPage({ params, searchParams }) {
             <p>
               <strong>{inAereo ? "Volo: prezzo reale" : "In aereo, prezzo reale"}</strong>{" "}
               {fmt(volo.prezzo)} a persona andata e ritorno{dettaglioVolo ? ` (${dettaglioVolo})` : ""},{" "}
-              {reale.tipo === "date_esatte"
+              {reale.tipo === "date_esatte" || reale.dateEsatte
                 ? `per le tue date, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`
                 : `per date vicine alle tue, ${fmtD(volo.andata)} - ${fmtD(volo.ritorno)}`}.
+              {soleAndate && ` Non abbiamo trovato un andata e ritorno, quindi sommiamo due voli di sola andata: ${fmt(volo.prezzoAndata)} all'andata e ${fmt(volo.prezzoRitorno)} al ritorno${nomiSoleAndate.length === 2 ? ` (${nomiSoleAndate[0]} e ${nomiSoleAndate[1]})` : ""}.`}
               {" "}È un prezzo trovato di recente su Aviasales, con il solo bagaglio a mano piccolo: il bagaglio da stiva di solito si paga a parte, e il prezzo può cambiare fino alla prenotazione.
               {inAereo ? " Le altre voci sono stime." : " Il costo qui sopra resta calcolato sul treno."}
             </p>
@@ -158,7 +173,10 @@ export default async function MetaPage({ params, searchParams }) {
           </div>
         )}
         {!volo && stima.t.canFly && inAereo && (
-          <p className={s.fine}>Per questa tratta e queste date non abbiamo ancora un prezzo reale del volo: il trasporto è stimato.</p>
+          <div className={s.voloReale}>
+            <p>Per questa tratta e queste date non abbiamo ancora un prezzo reale del volo: il trasporto è stimato. Puoi vedere i prezzi di oggi direttamente su Aviasales.</p>
+            {linkVerifica && <a className={`${s.btn} ${s.sun}`} href={linkVerifica} target="_blank" rel="noopener noreferrer sponsored">Verifica il prezzo di oggi su Aviasales</a>}
+          </div>
         )}
         {budget != null && (
           <p className={`${s.status} ${pp <= budget ? s.ok : s.no}`}>

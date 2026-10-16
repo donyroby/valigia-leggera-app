@@ -99,6 +99,8 @@ export default function Cerca() {
     ? "Calcola il viaggio"
     : inb.length ? `Mostra ${inb.length === 1 ? "la meta" : "le " + inb.length + " mete"} nel budget` : "Cerca";
   const card = (r, isOver) => <PassCard key={r.d.id} r={r} over={isOver} budget={st.budget} />;
+  // Con tante mete, le card si mostrano a gruppi: si riparte dal primo gruppo a ogni nuova ricerca
+  const chiaveElenco = [st.from, st.date, st.nights, st.people, st.profile, st.filter, st.budget, st.dest].join("|");
 
   return (
     <div className={s.page} data-profile={st.profile}>
@@ -227,10 +229,10 @@ export default function Cerca() {
                 <div className={s.empty}><strong>Parti già da lì.</strong><br />Scegli una destinazione diversa dalla città di partenza.</div>
               )}
               {inb.length > 0 && <h3 className={s.sub}>Altre idee nello stesso budget</h3>}
-              {inb.map((r) => card(r, false))}
+              <AGruppi key={"in" + chiaveElenco} items={inb} render={(r) => card(r, false)} />
             </>
           ) : inb.length ? (
-            inb.map((r) => card(r, false))
+            <AGruppi key={"in" + chiaveElenco} items={inb} render={(r) => card(r, false)} />
           ) : (
             <div className={s.empty}>
               <strong>Con {fmt(st.budget)} a persona non c&apos;è una meta adatta per queste date.</strong><br />
@@ -243,7 +245,7 @@ export default function Cerca() {
         {over.length > 0 && !notFound && (
           <details className={s.more}>
             <summary>Oltre il budget ({over.length})</summary>
-            <div className={s.stack} style={{ marginTop: 12 }}>{over.map((r) => card(r, true))}</div>
+            <div className={s.stack} style={{ marginTop: 12 }}><AGruppi key={"over" + chiaveElenco} items={over} render={(r) => card(r, true)} /></div>
           </details>
         )}
 
@@ -269,5 +271,21 @@ function NonTrovata({ testo, onPick }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Mostra le prime mete e un pulsante per vederne altre
+const PASSO = 24;
+function AGruppi({ items, render }) {
+  const [n, setN] = useState(PASSO);
+  return (
+    <>
+      {items.slice(0, n).map(render)}
+      {items.length > n && (
+        <button type="button" className={`${s.btn} ${s.ghost}`} style={{ width: "100%" }} onClick={() => setN(n + PASSO)}>
+          Mostra altre {Math.min(PASSO, items.length - n)} mete ({items.length - n} rimanenti)
+        </button>
+      )}
+    </>
   );
 }
