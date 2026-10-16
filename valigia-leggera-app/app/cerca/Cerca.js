@@ -166,7 +166,7 @@ export default function Cerca() {
             </select>
           </div>
           {st.kids > 0 && (
-            <div className={`${s.field} ${s.kidsages}`}>
+            <div className={`${s.field} ${s.kidsages}`} style={st.kidsAges.length > 2 ? { gridColumn: "span 2" } : undefined}>
               <span className={s.label}>Età dei bambini</span>
               <div className={s.row}>
                 {st.kidsAges.map((a, i) => (

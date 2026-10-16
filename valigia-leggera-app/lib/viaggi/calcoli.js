@@ -44,6 +44,7 @@ const fmtD=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numer
 const dfmtR=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"});
 function seasonF(iso,d){const m=new Date(iso+"T12:00:00").getMonth()+1;
   // Mete con la stagione "al contrario" (caldo d'inverno, emisfero sud): alta da dicembre a marzo
+  if(d&&d.neve){if(m===12||m===1||m===2||m===3)return 1.25; if(m===7||m===8)return 1.3; if(m===6||m===9)return 1; return 0.85}
   if(d&&d.inv){if(m===12||m===1||m===2||m===3)return 1.25; if(m===11||m===4)return 1.1; if(m>=6&&m<=9)return 0.85; return 1}
   if(m===7||m===8)return 1.35; if(m===12||m===4)return 1.15; if(m===6||m===9)return 1.08; if(m===1||m===2||m===11)return 0.85; return 1}
 function seasonLabel(iso,d){const f=seasonF(iso,d);return f>=1.3?"alta stagione":f>=1.2?"alta stagione":f>=1.1?"stagione medio-alta":f<1?"bassa stagione":"stagione media"}

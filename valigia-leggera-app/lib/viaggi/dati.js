@@ -33,7 +33,7 @@ const DESTS=[
  D("par","Parigi","Francia","CDG",0,"volo",[95,100,125],46,160,170,38,12,20,["arte","cibo"],"I grandi classici, con qualche trucco per non svuotare il portafoglio.","Giardini della Torre Eiffel|0;Louvre|22;Montmartre e Sacré-Cœur|0;Notre-Dame (esterno)|0;Marais|0;Giardini del Lussemburgo|0","Picnic sulla Senna|12;Aperitivo al Canal Saint-Martin|10;Torre Eiffel illuminata|0","Versailles"),
  D("dbv","Dubrovnik","Croazia","DBV",0,"volo",[100,95,85],35,120,140,28,5,12,["mare","arte"],"Mura antiche e mare cristallino, meglio fuori stagione.","Mura di Dubrovnik|35;Funivia del Monte Srđ|20;Città vecchia|0;Spiaggia di Banje|0;Kayak sotto le mura|30;Isola di Lokrum|25","Cena dalmata|20;Tramonto sulle mura|0;Aperitivo al Buža Bar|6","Isole Elafiti"),
  D("nap","Napoli","Italia","NAP",1,"treno",[45,25,8],20,75,80,22,4,10,["cibo","arte","mare"],"Pizza, vicoli e il Vesuvio sullo sfondo.","Museo Archeologico Nazionale|22;Napoli sotterranea|15;Spaccanapoli|0;Cappella Sansevero|10;Lungomare e Castel dell'Ovo|0;Vomero e Certosa di San Martino|6","Pizza a portafoglio|5;Pizzeria storica|8;Passeggiata a Posillipo|0","Pompei"),
- D("flr","Firenze","Italia","FLR",1,"treno",[25,10,45],26,100,110,26,5,16,["arte","cibo"],"Rinascimento a piedi, dal Duomo all'Oltrarno.","Galleria degli Uffizi|25;Duomo e Cupola|30;Ponte Vecchio|0;Giardino di Boboli|10;Piazzale Michelangelo|0;Mercato Centrale|0","Lampredotto|5;Aperitivo in Oltrarno|10;Trattoria toscana|22","Siena e San Gimignano"),
+ D("flr","Firenze","Italia","FLR",1,"treno",[25,10,45],24,85,95,26,5,16,["arte","cibo"],"Rinascimento a piedi, dal Duomo all'Oltrarno.","Galleria degli Uffizi|25;Duomo e Cupola|30;Ponte Vecchio|0;Giardino di Boboli|10;Piazzale Michelangelo|0;Mercato Centrale|0","Lampredotto|5;Aperitivo in Oltrarno|10;Trattoria toscana|22","Siena e San Gimignano"),
  D("vce","Venezia","Italia","VCE",1,"treno",[15,30,65],30,115,125,28,9,18,["arte"],"Un labirinto d'acqua: la si gira meglio con tempo e scarpe comode.","Piazza San Marco e Basilica|3;Rialto e mercato|0;Murano e Burano in vaporetto|9;Gallerie dell'Accademia|15;Cannaregio|0;Giudecca|2","Cicchetti e ombra|12;Tramonto alle Zattere|0;Cena in un bacaro|22","Padova"),
  D("pmo","Palermo","Italia","PMO",1,"volo",[90,85,70],18,65,70,20,4,9,["cibo","mare","arte"],"Street food, mosaici normanni e Mondello a due passi.","Cattedrale e Palazzo dei Normanni|15;Mercato di Ballarò|0;Teatro Massimo|10;Quattro Canti|0;Kalsa e Palazzo Abatellis|8;Spiaggia di Mondello|0","Street food (arancine, panelle)|8;Cena in trattoria|20;Aperitivo alla Kalsa|8","Cefalù"),
  D("lcc","Lecce","Italia","BDS",1,"treno",[75,55,15],19,70,75,21,4,8,["mare","cibo","arte"],"Barocco in pietra dorata e mare salentino vicinissimo.","Centro barocco|0;Basilica di Santa Croce|0;Anfiteatro romano|0;Porta Napoli|0;Spiaggia di Torre dell'Orso|0;Otranto|0","Pasticciotto|2;Orecchiette e tavernette|15;Aperitivo in centro|8","Gallipoli"),
@@ -103,7 +103,7 @@ const WORLD_NOTES={
 const COMPLETE=METE_EUROPA.map(m=>{
   const [h,ho,ap,fo,tr,ac]=m.k;
   // luoghi, serate e gita si aggiungono con conDettagli (lib/viaggi/dettagli.js), solo nella scheda
-  const d={id:m.id,name:m.name,cc:m.cc,iata:m.iata,it:0,lat:m.lat,lon:m.lon,h,ho,ap,fo,tr,ac,tags:m.tags,note:m.note};
+  const d={id:m.id,name:m.name,cc:m.cc,iata:m.iata,it:m.cc==="Italia"?1:0,lat:m.lat,lon:m.lon,h,ho,ap,fo,tr,ac,tags:m.tags,note:m.note};
   if(m.x)d.nt=true;                            // solo in aereo
   if(m.x==="med"){d.world=true;d.breve=true}   // fuori Europa ma a corto raggio
   if(m.x==="mondo")d.world=true;               // intercontinentale
@@ -112,7 +112,9 @@ const COMPLETE=METE_EUROPA.map(m=>{
 const COMPLETE_ID=new Set(COMPLETE.map(d=>d.id));
 // Mete dove la stagione è "al contrario": caldo d'inverno (Mar Rosso, Golfo, Caraibi, tropici, Canarie) o emisfero sud
 const STAGIONE_INVERSA=new Set(["c_tenerife","c_grancanaria","c_fuerteventura","c_lanzarote","c_sharmelsheikh","c_hurghada","c_marsaalam","c_luxor","w_ilcairo","w_dubai","w_abudhabi","w_doha","w_mascate","w_cancun","w_tulum","w_puntacana","w_lavana","w_miami","w_bangkok","w_phuket","w_chiangmai","w_hochiminh","w_siemreapangkor","w_srilanka","w_maldive","w_nuovadelhieagra","w_malindiewatamu","w_capoverdesal","w_dakar","w_sydney","w_melbourne","w_auckland","w_riodejaneiro","w_buenosaires","w_cittadelcapo","w_santiagodelcile"]);
-COMPLETE.forEach(d=>{if(STAGIONE_INVERSA.has(d.id))d.inv=true});
+// Località da sci: alta stagione d'inverno e ad agosto
+const STAGIONE_NEVE=new Set(["c_courmayeur","c_cortinadampezzo","c_livigno","c_ortiseievalgardena"]);
+COMPLETE.forEach(d=>{if(STAGIONE_INVERSA.has(d.id))d.inv=true;if(STAGIONE_NEVE.has(d.id))d.neve=true});
 const TOLTE=new Set(["w_telaviv"]); // mete tolte per motivi di sicurezza (sconsigli della Farnesina)
 DESTS.push(...COMPLETE);
 const ALL=DESTS.concat(CITIES.filter(c=>!COMPLETE_ID.has(c.id))).concat(WORLD.filter(w=>!COMPLETE_ID.has(w.id)&&!TOLTE.has(w.id)));
