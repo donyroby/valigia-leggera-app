@@ -6,6 +6,7 @@ import TopBar from "@/components/TopBar";
 import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
 import { ALL } from "@/lib/viaggi/dati";
+import { conDettagli } from "@/lib/viaggi/dettagli";
 import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
 import { voloPerDate, voliPerRicerca, dueSoleAndate, codiceCitta } from "@/lib/voli/travelpayouts";
 import { voloDellaMeta } from "@/lib/voli/codici";
@@ -43,7 +44,7 @@ export async function generateMetadata({ params, searchParams }) {
 export default async function MetaPage({ params, searchParams }) {
   const { id } = await params;
   const sp = await searchParams;
-  const d0 = ALL.find((x) => x.id === id);
+  const d0 = conDettagli(ALL.find((x) => x.id === id));
   if (!d0) notFound();
 
   const p = daIndirizzo(sp);
@@ -115,7 +116,7 @@ export default async function MetaPage({ params, searchParams }) {
         ? "da " + r.dep.n + ", " + p.people + " pers. × " + fmt(volo.prezzo) + (dettaglioVolo ? " · " + dettaglioVolo : "")
         : "da " + r.dep.n + ", " + p.people + " pers. · circa " + r.hrs + " · stima",
       parts.trav],
-    [r.lodgLabel, p.nights + " notti · " + seasonLabel(p.date), parts.lodg],
+    [r.lodgLabel, p.nights + " notti · " + seasonLabel(p.date, d0), parts.lodg],
     ["Pasti e cibo", p.nights + 1 + " giorni", parts.food],
     ["Spostamenti locali", "mezzi pubblici e taxi occasionali", parts.trans],
     ["Attività e ingressi", "musei, visite, esperienze", parts.act],
@@ -188,7 +189,7 @@ export default async function MetaPage({ params, searchParams }) {
           <SaveButton loggedIn={!!user} savedId={savedId} destId={d.id} params={p} pp={pp} budget={budget} here={here} />
         </div>
         <div className={s.actions}>
-          <Condividi destId={d.id} params={p} />
+          <Condividi dest={d0} params={p} />
         </div>
 
         <h2 className={s.h}>Itinerario proposto</h2>
@@ -197,7 +198,7 @@ export default async function MetaPage({ params, searchParams }) {
             <h3>{day.title}</h3>
             <ul>
               {day.items.map(([slot, a], i) => {
-                const isPlace = d.day.includes(a) || d.eve.includes(a);
+                const isPlace = (d.day.includes(a) || d.eve.includes(a)) && !a.gen;
                 return (
                   <li key={slot + i}>
                     <span>

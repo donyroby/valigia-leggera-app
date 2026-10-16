@@ -9,19 +9,28 @@ const protoFile = process.argv[2];
 if (!protoFile) { console.error("Indica il file del prototipo"); process.exit(2); }
 
 // 1. Prototipo: carico dati e calcoli (righe fino a usableAll) in un ambiente isolato
+const [OLD_SEASON, NEW_SEASON] = ["function seasonF(iso){const m=new Date(iso+\"T12:00:00\").getMonth()+1;\n  if(m===7||m===8)return 1.35; if(m===12||m===4)return 1.15; if(m===6||m===9)return 1.08; if(m===1||m===2||m===11)return 0.85; return 1}\nfunction seasonLabel(iso){const f=seasonF(iso);return f>=1.3?\"alta stagione\":f>=1.1?\"stagione medio-alta\":f<1?\"bassa stagione\":\"stagione media\"}", "function seasonF(iso,d){const m=new Date(iso+\"T12:00:00\").getMonth()+1;\n  // Mete con la stagione \"al contrario\" (caldo d'inverno, emisfero sud): alta da dicembre a marzo\n  if(d&&d.inv){if(m===12||m===1||m===2||m===3)return 1.25; if(m===11||m===4)return 1.1; if(m>=6&&m<=9)return 0.85; return 1}\n  if(m===7||m===8)return 1.35; if(m===12||m===4)return 1.15; if(m===6||m===9)return 1.08; if(m===1||m===2||m===11)return 0.85; return 1}\nfunction seasonLabel(iso,d){const f=seasonF(iso,d);return f>=1.3?\"alta stagione\":f>=1.2?\"alta stagione\":f>=1.1?\"stagione medio-alta\":f<1?\"bassa stagione\":\"stagione media\"}"];
 // Il prototipo usa i dati dell'app (comprese le mete aggiunte dopo), così si confronta solo la logica di calcolo.
-// Le uniche modifiche alla logica sono le mete "solo in aereo" (nt) e quelle "fuori Europa a corto raggio" (breve).
+// Le uniche modifiche alla logica: mete "solo in aereo" (nt), "fuori Europa a corto raggio" (breve) e stagione al contrario (inv).
 const lines = fs.readFileSync(protoFile, "utf8")
   .replace("const ALL=DESTS.concat(CITIES).concat(WORLD);", "const ALL=globalThis.__APP.ALL;DESTS.length=0;DESTS.push(...globalThis.__APP.DESTS);")
   .replace("  if(d.world){", "  if(d.world&&!d.breve){")
   .replace("const isl=ISL_FORCE.includes(d.iata)||islandOf", "const isl=ISL_FORCE.includes(d.iata)||d.nt||islandOf")
+  .replace(OLD_SEASON, NEW_SEASON)
+  .replace("pe=p.people, f=seasonF(p.date);", "pe=p.people, f=seasonF(p.date,d);")
   .split("\n");
 const end = lines.findIndex(l => l.startsWith("const usableAll"));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vl-"));
 const src = path.resolve("lib/viaggi");
 fs.writeFileSync(path.join(tmp, "mete-europa.mjs"), fs.readFileSync(path.join(src, "mete-europa.js"), "utf8"));
 fs.writeFileSync(path.join(tmp, "dati.mjs"), fs.readFileSync(path.join(src, "dati.js"), "utf8").replace('from "./mete-europa"', 'from "./mete-europa.mjs"'));
-const ND = await import(path.join(tmp, "dati.mjs"));
+fs.writeFileSync(path.join(tmp, "mete-itinerari.mjs"), fs.readFileSync(path.join(src, "mete-itinerari.js"), "utf8"));
+fs.writeFileSync(path.join(tmp, "dettagli.mjs"), fs.readFileSync(path.join(src, "dettagli.js"), "utf8").replace('from "./mete-itinerari"', 'from "./mete-itinerari.mjs"'));
+const NDslim = await import(path.join(tmp, "dati.mjs"));
+const { conDettagli } = await import(path.join(tmp, "dettagli.mjs"));
+// Per confrontare anche gli itinerari servono le mete con luoghi e serate
+const ALLD = NDslim.ALL.map(conDettagli), byId = new Map(ALLD.map((d) => [d.id, d]));
+const ND = { ...NDslim, ALL: ALLD, DESTS: NDslim.DESTS.map((d) => byId.get(d.id)) };
 globalThis.__APP = ND;
 const store = {};
 const ctx = vm.createContext({ localStorage: { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } }, console, __APP: ND });

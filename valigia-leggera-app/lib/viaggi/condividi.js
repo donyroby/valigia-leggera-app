@@ -18,7 +18,7 @@ export function testoViaggio(r, o = {}) {
   // L'itinerario di base ha luoghi veri solo per le mete principali; per le città stimate sono indicazioni generiche
   if (!d.est) {
     itinerary(r).forEach((day) => {
-      const items = day.items.map(([slot, a]) => ({ slot, name: a.n, link: d.day.includes(a) || d.eve.includes(a), food: isFood(slot, a.n) }));
+      const items = day.items.map(([slot, a]) => ({ slot, name: a.n, link: (d.day.includes(a) || d.eve.includes(a)) && !a.gen, food: isFood(slot, a.n) }));
       out.push(day.title.toUpperCase());
       const vis = items.filter((x) => !x.food), eat = items.filter((x) => x.food);
       if (vis.length) { out.push("Da visitare"); vis.forEach((x) => out.push(item(x))); }

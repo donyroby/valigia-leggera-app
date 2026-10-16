@@ -2,19 +2,19 @@
 
 import { useMemo, useRef, useState } from "react";
 import s from "@/components/viaggi.module.css";
-import { ALL } from "@/lib/viaggi/dati";
 import { calc } from "@/lib/viaggi/calcoli";
 import { versioni } from "@/lib/viaggi/condividi";
 
 // Condividi e stampa la scheda della meta
-export default function Condividi({ destId, params }) {
+// dest: la meta con luoghi e serate (arriva dalla pagina, così il browser non scarica tutti gli itinerari)
+export default function Condividi({ dest, params }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
   const taRef = useRef(null);
 
   const testi = useMemo(() => {
     if (!open) return null;
-    const r = calc(ALL.find((x) => x.id === destId), params);
+    const r = calc(dest, params);
     const url = typeof window !== "undefined" ? window.location.href : "";
     const t = versioni(r, url);
     const enc = (x) => encodeURIComponent(x).length;
@@ -26,7 +26,7 @@ export default function Condividi({ destId, params }) {
     if (wi >= 2) nota = "Per WhatsApp ho accorciato il testo. Con Copia testo ottieni la versione completa.";
     if (mi > 0) nota += " Nell'email il testo è più corto: usa Copia testo per la versione completa.";
     return { full: t[0], wa: t[wi], mail: t[mi], nota, nome: r.d.name };
-  }, [open, destId, params]);
+  }, [open, dest, params]);
 
   async function copia() {
     const v = testi.full;

@@ -102,14 +102,20 @@ const WORLD_NOTES={
 // e sostituiscono la stima generica della stessa città, se c'era.
 const COMPLETE=METE_EUROPA.map(m=>{
   const [h,ho,ap,fo,tr,ac]=m.k;
-  const d={id:m.id,name:m.name,cc:m.cc,iata:m.iata,it:0,lat:m.lat,lon:m.lon,h,ho,ap,fo,tr,ac,tags:m.tags,note:m.note,day:A(m.day),eve:A(m.eve),gita:m.gita};
-  if(m.x)d.nt=true;               // solo in aereo
-  if(m.x==="med"){d.world=true;d.breve=true} // fuori Europa ma a corto raggio
+  // luoghi, serate e gita si aggiungono con conDettagli (lib/viaggi/dettagli.js), solo nella scheda
+  const d={id:m.id,name:m.name,cc:m.cc,iata:m.iata,it:0,lat:m.lat,lon:m.lon,h,ho,ap,fo,tr,ac,tags:m.tags,note:m.note};
+  if(m.x)d.nt=true;                            // solo in aereo
+  if(m.x==="med"){d.world=true;d.breve=true}   // fuori Europa ma a corto raggio
+  if(m.x==="mondo")d.world=true;               // intercontinentale
   return d;
 });
 const COMPLETE_ID=new Set(COMPLETE.map(d=>d.id));
+// Mete dove la stagione è "al contrario": caldo d'inverno (Mar Rosso, Golfo, Caraibi, tropici, Canarie) o emisfero sud
+const STAGIONE_INVERSA=new Set(["c_tenerife","c_grancanaria","c_fuerteventura","c_lanzarote","c_sharmelsheikh","c_hurghada","c_marsaalam","c_luxor","w_ilcairo","w_dubai","w_abudhabi","w_doha","w_mascate","w_cancun","w_tulum","w_puntacana","w_lavana","w_miami","w_bangkok","w_phuket","w_chiangmai","w_hochiminh","w_siemreapangkor","w_srilanka","w_maldive","w_nuovadelhieagra","w_malindiewatamu","w_capoverdesal","w_dakar","w_sydney","w_melbourne","w_auckland","w_riodejaneiro","w_buenosaires","w_cittadelcapo","w_santiagodelcile"]);
+COMPLETE.forEach(d=>{if(STAGIONE_INVERSA.has(d.id))d.inv=true});
+const TOLTE=new Set(["w_telaviv"]); // mete tolte per motivi di sicurezza (sconsigli della Farnesina)
 DESTS.push(...COMPLETE);
-const ALL=DESTS.concat(CITIES.filter(c=>!COMPLETE_ID.has(c.id))).concat(WORLD);
+const ALL=DESTS.concat(CITIES.filter(c=>!COMPLETE_ID.has(c.id))).concat(WORLD.filter(w=>!COMPLETE_ID.has(w.id)&&!TOLTE.has(w.id)));
 
 const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
 const MONTH_PICKS={

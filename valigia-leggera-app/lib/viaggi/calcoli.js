@@ -42,11 +42,13 @@ const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:
 const fmt=n=>{const v=Math.round(n),a=String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g,".");return (v<0?"-":"")+a+" €"};
 const fmtD=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
 const dfmtR=iso=>new Date(iso+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"});
-function seasonF(iso){const m=new Date(iso+"T12:00:00").getMonth()+1;
+function seasonF(iso,d){const m=new Date(iso+"T12:00:00").getMonth()+1;
+  // Mete con la stagione "al contrario" (caldo d'inverno, emisfero sud): alta da dicembre a marzo
+  if(d&&d.inv){if(m===12||m===1||m===2||m===3)return 1.25; if(m===11||m===4)return 1.1; if(m>=6&&m<=9)return 0.85; return 1}
   if(m===7||m===8)return 1.35; if(m===12||m===4)return 1.15; if(m===6||m===9)return 1.08; if(m===1||m===2||m===11)return 0.85; return 1}
-function seasonLabel(iso){const f=seasonF(iso);return f>=1.3?"alta stagione":f>=1.1?"stagione medio-alta":f<1?"bassa stagione":"stagione media"}
+function seasonLabel(iso,d){const f=seasonF(iso,d);return f>=1.3?"alta stagione":f>=1.2?"alta stagione":f>=1.1?"stagione medio-alta":f<1?"bassa stagione":"stagione media"}
 function calc(d,p){
-  const dep=DEPS.find(x=>x.id===p.from), n=p.nights, days=n+1, pe=p.people, f=seasonF(p.date);
+  const dep=DEPS.find(x=>x.id===p.from), n=p.nights, days=n+1, pe=p.people, f=seasonF(p.date,d);
   const t=travelOpt(d,dep,p.tm||"auto");
   const d0={...d,mode:t.mode};
   const trF=d0.mode==="treno"?1+(f-1)/2:f;
