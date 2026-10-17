@@ -15,8 +15,11 @@ const ERRORI = {
   credito: "Il servizio non è disponibile in questo momento: riprova più tardi.",
   interrotto: "La creazione si è interrotta. Riprova: non ti è stato conteggiato.",
   lettura: "Non sono riuscito a leggere l'itinerario. Riprova: non ti è stato conteggiato.",
+  tempo: "Claude ci ha messo troppo questa volta. Riprova: non ti è stato conteggiato.",
+  lungo: "L'itinerario è venuto troppo lungo. Riprova: non ti è stato conteggiato.",
 };
-const errore = (c) => ERRORI[c] || "Qualcosa è andato storto. Riprova tra poco.";
+// Il codice tra parentesi aiuta a capire il problema se qualcuno lo segnala
+const errore = (c) => ERRORI[c] || `Qualcosa è andato storto. Riprova tra poco.${c ? ` (codice: ${c})` : ""}`;
 
 export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, loginHref, salvati, usatiIniziali, premium }) {
   const [temi, setTemi] = useState(["classico"]);
@@ -48,42 +51,21 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
   async function crea(rigenera) {
     ctl.current = new AbortController();
     setSec(0);
-    setStato({ fase: "carico", n: 0 });
+    setStato({ fase: "carico" });
     try {
       const res = await fetch("/api/itinerario", {
         method: "POST", signal: ctl.current.signal, headers: { "content-type": "application/json" },
         body: JSON.stringify({ destId, qs, temi, rigenera }),
       });
-      const tipo = res.headers.get("content-type") || "";
-      if (!tipo.includes("ndjson")) {
-        const j = await res.json().catch(() => ({}));
-        if (j.dati) { setMappa((m) => ({ ...m, [chiave]: j.dati })); setStato({ fase: "pronto" }); return; }
-        setStato({ fase: "errore", msg: errore(j.codice) });
-        return;
-      }
-      const reader = res.body.getReader(), dec = new TextDecoder();
-      let buf = "", fine = null;
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf("\n")) >= 0) {
-          const riga = buf.slice(0, i); buf = buf.slice(i + 1);
-          if (!riga.trim()) continue;
-          const ev = JSON.parse(riga);
-          if (ev.t === "avanzo") setStato({ fase: "carico", n: ev.n });
-          else fine = ev;
-        }
-      }
-      if (fine?.t === "ok") {
-        setMappa((m) => ({ ...m, [chiave]: fine.dati }));
-        setUsati(fine.usati);
+      const j = await res.json().catch(() => ({ codice: `http_${res.status}` }));
+      if (j.dati) {
+        setMappa((m) => ({ ...m, [chiave]: j.dati }));
+        if (typeof j.usati === "number") setUsati(j.usati);
         setStato({ fase: "pronto" });
-      } else setStato({ fase: "errore", msg: errore(fine?.codice) });
+      } else setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
     } catch (e) {
       if (e?.name === "AbortError") { setStato({ fase: "pronto" }); return; }
-      setStato({ fase: "errore", msg: errore() });
+      setStato({ fase: "errore", msg: errore("connessione") });
     }
   }
 
@@ -100,7 +82,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     const msg = sec < 8 ? `Sto pensando ai luoghi giusti a ${destName}…` : sec < 25 ? "Sto scrivendo l'itinerario…" : "Ci sto mettendo più del solito, ma sto ancora lavorando…";
     azione = (
       <div className={s.genbox}>
-        <p className={s.fine} role="status">{msg}{stato.n ? ` (${stato.n} caratteri)` : ""} · {sec} s</p>
+        <p className={s.fine} role="status">{msg} · {sec} s</p>
         <button type="button" className={`${s.btn} ${s.ghost}`} onClick={() => ctl.current?.abort()}>Annulla</button>
       </div>
     );

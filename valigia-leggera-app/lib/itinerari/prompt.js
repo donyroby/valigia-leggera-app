@@ -42,6 +42,8 @@ ${themes.includes("classico") ? "Livello atteso, per esempio per Verona: Arena, 
 CONTESTO
 Viaggiatori: ${who}. Partenza ${p.date}, ${p.nights} notti, ${seasonLabel(p.date, d)}. Scrivi in italiano.
 
+Sii conciso: "what" e "tip" al massimo 15 parole ciascuno.
+
 Nel campo "kind" scrivi "cibo" per mercati, locali, botteghe, cantine e assaggi, "visita" per tutto il resto.
 
 Rispondi SOLO con JSON in questa forma:
