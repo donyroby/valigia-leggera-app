@@ -5,6 +5,7 @@ import s from "@/components/viaggi.module.css";
 import TopBar from "@/components/TopBar";
 import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
+import ItinerarioClaude from "./ItinerarioClaude";
 import { ALL } from "@/lib/viaggi/dati";
 import { conDettagli } from "@/lib/viaggi/dettagli";
 import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
@@ -103,6 +104,18 @@ export default async function MetaPage({ params, searchParams }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   let savedId = null;
+  // Itinerari su misura già creati per questa meta, quanti ne ha usati e se è premium
+  let itinSalvati = [], itinUsati = 0, premium = false;
+  if (user) {
+    const [it, cnt, pr] = await Promise.all([
+      supabase.from("itinerari").select("chiave, dati, created_at").eq("dest_id", d0.id).order("created_at", { ascending: true }),
+      supabase.from("itinerari").select("id", { count: "exact", head: true }),
+      supabase.from("premium").select("user_id").eq("user_id", user.id).maybeSingle(),
+    ]);
+    itinSalvati = it.data || [];
+    itinUsati = cnt.count || 0;
+    premium = !!pr.data;
+  }
   if (user) {
     const { data } = await supabase.from("saved_trips").select("*").eq("destination_id", d.id);
     const match = (data || []).find((row) => stessoViaggio(row, d.id, p));
@@ -214,7 +227,11 @@ export default async function MetaPage({ params, searchParams }) {
           </div>
         ))}
         {p.nights + 1 > 8 && <p className={s.fine}>Mostrati i primi 8 giorni.</p>}
-        <p className={s.fine}>Presto potrai anche creare un itinerario su misura per temi (luoghi da visitare, enogastronomico, natura e altri), come nel prototipo.</p>
+        <ItinerarioClaude
+          destId={d0.id} destName={d0.name} qs={qs} p={{ nights: p.nights, profile: p.profile, date: p.date }}
+          loggedIn={!!user} loginHref={`/accedi?next=${encodeURIComponent(here)}`}
+          salvati={itinSalvati} usatiIniziali={itinUsati} premium={premium}
+        />
 
         <p className={s.sumline}><b>La tua ricerca:</b> {L.sum}</p>
         {r.note && <p className={s.fine}>{r.note}</p>}

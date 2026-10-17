@@ -5,7 +5,7 @@ export const LEGALE = {
   tipoTitolare: "persona fisica",
   email: "info@valigialeggera.it",
   sito: "valigialeggera.it",
-  aggiornato: "12 ottobre 2026",
+  aggiornato: "17 ottobre 2026",
   etaMinima: 14,
   // Finché è true, in cima alle pagine compare l'avviso di bozza
   bozza: false,

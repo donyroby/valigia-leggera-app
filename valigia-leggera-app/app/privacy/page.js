@@ -27,6 +27,7 @@ export default function Privacy() {
         <li><strong>Profilo</strong>: il nome con cui vuoi essere chiamato, se lo inserisci, e con chi viaggi di solito.</li>
         <li><strong>Viaggi salvati</strong>: meta, aeroporto di partenza, date, numero di persone, numero ed età dei bambini (senza nomi), budget e preferenze del viaggio.</li>
         <li><strong>Salvadanaio</strong>: le cifre che inserisci, l&apos;obiettivo e la cifra mensile. Sono solo promemoria: Valigia Leggera non gestisce denaro.</li>
+        <li><strong>Itinerari su misura</strong>: gli itinerari che crei con Claude (meta, temi scelti e testo dell&apos;itinerario), per mostrarteli di nuovo e contare quelli gratuiti che hai usato.</li>
       </ul>
       <p>
         Le ultime scelte della ricerca vengono ricordate solo nel tuo browser, per comodità, e non ci vengono inviate.
@@ -59,6 +60,7 @@ export default function Privacy() {
         <li><strong>Brevo</strong>: invio delle email di accesso, azienda con sede in Francia (Unione europea).</li>
         <li><strong>GoatCounter</strong>: statistiche anonime delle visite, senza cookie, con i dati conservati su server in Germania e Finlandia (Unione europea).</li>
         <li><strong>Sentry</strong> (Functional Software Inc., Stati Uniti): segnalazione degli errori tecnici del sito, con i dati conservati su server nell&apos;Unione europea (Germania).</li>
+        <li><strong>Anthropic</strong> (Anthropic PBC, Stati Uniti): scrittura degli itinerari su misura con il modello Claude. Inviamo solo i dati del viaggio (meta, data, durata, tipo di viaggio e temi scelti), mai la tua email o altri dati dell&apos;account. Gli eventuali trasferimenti fuori dall&apos;Unione europea avvengono sulla base delle garanzie previste dal GDPR.</li>
       </ul>
 
       <h2>Link ai siti partner</h2>

@@ -292,3 +292,8 @@
 .offerta .qlinks .ghost{border-color:var(--line)}
 .page .offerta .price{color:var(--ink)}
 .voloTag{font-size:.8rem;font-weight:700;color:var(--sea)}
+
+/* Itinerario su misura (Claude) */
+.genbox{margin:10px 0 18px;display:grid;gap:8px;justify-items:start}
+.genbox .fine{margin:0}
+.day small{color:var(--muted);font-size:.86rem;line-height:1.45}
