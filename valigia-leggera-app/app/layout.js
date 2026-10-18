@@ -2,6 +2,7 @@ import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/dm-sans";
 import "./globals.css";
 import Statistiche from "@/components/Statistiche";
+import LinkScaduto from "@/components/LinkScaduto";
 
 const SITO = "https://valigialeggera.it";
 const TITOLO = "Valigia Leggera · Dove ti porta il tuo budget?";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <Statistiche />
+        <LinkScaduto />
       </body>
     </html>
   );

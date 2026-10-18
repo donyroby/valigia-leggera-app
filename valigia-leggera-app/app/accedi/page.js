@@ -36,8 +36,8 @@ export default async function AccediPage({ searchParams }) {
       )}
       {linkError && (
         <p className="alert" role="alert">
-          Il link non è valido o è scaduto. Chiedine uno nuovo qui sotto, e aprilo
-          nello stesso browser da cui lo richiedi.
+          Il link è scaduto o è già stato usato: ogni link vale una volta sola e per poco tempo.
+          Scrivi qui sotto la tua email per riceverne uno nuovo, e apri sempre l&apos;ultima email arrivata.
         </p>
       )}
       <LoginForm next={next} />
