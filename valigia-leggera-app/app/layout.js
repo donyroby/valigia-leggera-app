@@ -9,6 +9,8 @@ const TITOLO = "Valigia Leggera · Dove ti porta il tuo budget?";
 const DESCRIZIONE =
   "Scegli da dove parti, le date e quanto vuoi spendere a persona: Valigia Leggera ti mostra le mete in Italia, in Europa e nel mondo che stanno nel tuo budget.";
 
+import { NASCOSTO_AI_MOTORI } from "@/lib/lancio";
+
 export const metadata = {
   metadataBase: new URL(SITO),
   title: TITOLO,
@@ -23,6 +25,8 @@ export const metadata = {
     description: DESCRIZIONE,
   },
   twitter: { card: "summary_large_image", title: TITOLO, description: DESCRIZIONE },
+  // Prima del lancio: nessuna pagina nei risultati di Google & co.
+  ...(NASCOSTO_AI_MOTORI ? { robots: { index: false, follow: false, googleBot: { index: false, follow: false } } } : {}),
 };
 
 export const viewport = {
