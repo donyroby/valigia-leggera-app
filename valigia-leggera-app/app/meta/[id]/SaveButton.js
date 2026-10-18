@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import s from "@/components/viaggi.module.css";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +10,12 @@ import { versoRiga } from "@/lib/viaggi/parametri";
 export default function SaveButton({ loggedIn, savedId, destId, params, pp, budget, here }) {
   const [id, setId] = useState(savedId);
   const [status, setStatus] = useState("idle"); // idle | busy | error
+  // Il salvadanaio della scheda può salvare il viaggio: qui si aggiorna senza ricaricare
+  useEffect(() => {
+    const h = (e) => setId(e.detail?.id || null);
+    window.addEventListener("vl-viaggio-salvato", h);
+    return () => window.removeEventListener("vl-viaggio-salvato", h);
+  }, []);
 
   if (!loggedIn) {
     return (

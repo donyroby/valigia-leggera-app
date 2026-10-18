@@ -297,3 +297,69 @@
 .genbox{margin:10px 0 18px;display:grid;gap:8px;justify-items:start}
 .genbox .fine{margin:0}
 .day small{color:var(--muted);font-size:.86rem;line-height:1.45}
+
+/* ===== Itinerario su misura e salvadanaio in primo piano (ottobre 2026) ===== */
+.page{--ai-bg:#0B4F5C;--ai-ink:#F2FAFA;--ai-muted:#B9D9DB;--ai-chip:#13697A;--ai-line:#2C7E8C;--ai-sun:#FFC633;--ai-sun-ink:#3A2A00}
+@media (prefers-color-scheme:dark){.page{--ai-bg:#0F3E4B;--ai-ink:#EAF7F7;--ai-muted:#9CC9CC;--ai-chip:#175A68;--ai-line:#2A6C78}}
+
+/* Totale in cima alla scheda */
+.totalBox{margin:16px 0 18px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--bg);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center}
+.totalBig{font-family:var(--display);font-size:1.9rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.totalBox small{color:var(--muted);font-size:.85rem}
+.totalBox a{color:var(--sea);font-size:.85rem;text-align:right}
+.totalBox .status{grid-column:1/-1;margin-top:6px}
+
+/* Riquadro dell'itinerario scritto con l'AI */
+.aibox{position:relative;overflow:hidden;background:var(--ai-bg);color:var(--ai-ink);border-radius:20px;padding:22px 20px 18px;margin:0 0 16px;display:grid;gap:12px}
+.aibox::after{content:"";position:absolute;right:-36px;top:-36px;width:150px;height:150px;border-radius:50%;border:18px solid var(--ai-line);opacity:.45;pointer-events:none}
+.aibox > *{position:relative}
+.aiKicker{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ai-sun)}
+.aiKicker svg{width:14px;height:14px}
+.page .aibox h2{color:var(--ai-ink);font-size:1.45rem;font-weight:800;margin:0}
+.aibox p{margin:0;color:var(--ai-muted);font-size:.92rem;line-height:1.5}
+.aibox .chips{margin:2px 0 0}
+.page .aibox .chip{background:var(--ai-chip);color:var(--ai-ink);border-color:var(--ai-line)}
+.page .aibox .chip[aria-pressed="true"]{background:var(--ai-sun);color:var(--ai-sun-ink);border-color:var(--ai-sun);font-weight:700}
+.aiFixed{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem;color:var(--ai-muted)}
+.aiFixed b{background:var(--ai-sun);color:var(--ai-sun-ink);border-radius:999px;padding:3px 11px;font-size:.82rem}
+.page .aiCta{background:var(--ai-sun);color:var(--ai-sun-ink);width:100%;font-size:1.02rem;padding:13px 16px;margin:0}
+.page .aiGhost{background:transparent;color:var(--ai-ink);border:1px solid var(--ai-line);margin:0}
+.aiMeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;font-size:.82rem;color:var(--ai-muted)}
+.page .aibox a{color:var(--ai-ink)}
+.aiErr{background:#FFE3E5;color:#7A1520;border-radius:10px;padding:8px 12px;font-size:.88rem;font-weight:700}
+.aiResult{background:var(--card);color:var(--ink);border-radius:14px;padding:16px;display:grid;gap:4px}
+.aiResult .day{margin-bottom:12px}
+.page .aiResult a{color:inherit}
+.aiSample{border-top:1px solid var(--ai-line);padding-top:10px}
+.aiSample summary{cursor:pointer;font-size:.9rem;color:var(--ai-ink);font-weight:700}
+.aiSample[open] summary{margin-bottom:10px}
+.aiSample .aiResult{margin-top:4px}
+
+/* Salvadanaio della meta */
+.pigbox{border:2px solid var(--ai-bg);border-radius:18px;padding:16px;margin:0 0 22px;background:var(--card);display:grid;gap:12px}
+.pigHead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.jar{width:38px;height:50px;border:2px solid var(--ai-bg);border-radius:8px 8px 11px 11px;position:relative;overflow:hidden;background:var(--bg)}
+.jar span{position:absolute;left:0;right:0;bottom:0;background:var(--ai-sun);transition:height .4s}
+.pigKicker{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--sea)}
+.page .pigbox h2{font-size:1.15rem;margin:2px 0 0}
+.pigbox small{color:var(--muted);font-size:.85rem}
+.pigLines{display:grid;gap:6px;font-size:.95rem}
+.pigLines p{margin:0}
+.pigLines b{font-variant-numeric:tabular-nums}
+.page .pigCta{background:var(--ai-bg);color:var(--ai-ink);margin:0;width:100%}
+.pigTip{font-size:.84rem;color:var(--muted);margin:0;line-height:1.5}
+
+/* Segni sulle schede dei risultati */
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badgeAi,.badgePig{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:700;border-radius:999px;padding:3px 10px}
+.badgeAi{background:var(--ai-bg);color:var(--ai-ink)}
+.badgeAi svg{width:12px;height:12px;color:var(--ai-sun)}
+.badgePig{background:var(--card);color:var(--ai-bg);border:1px solid var(--ai-bg)}
+@media (prefers-color-scheme:dark){.badgePig{color:var(--ai-muted);border-color:var(--ai-line)}}
+
+/* Le due promesse in homepage */
+.pillars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;max-width:640px}
+.pillars div{background:var(--ai-bg);color:var(--ai-ink);border-radius:14px;padding:12px 14px;display:grid;gap:3px}
+.pillars b{font-family:var(--display);font-size:1.05rem}
+.page .pillars span{color:var(--ai-muted);font-size:.88rem;line-height:1.4}
+@media (max-width:520px){.pillars{grid-template-columns:minmax(0,1fr)}}

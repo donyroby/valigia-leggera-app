@@ -188,6 +188,14 @@ export default function Salvadanaio({ userId, initial, trips, defaultProfile }) 
         Mete e prezzi sono stime, non offerte reali, e valgono per una persona e un weekend breve ({NOTTI_SALVADANAIO} notti), con la partenza
         e il profilo dell&apos;ultima ricerca. Il salvadanaio è un promemoria: non muove denaro vero.
       </p>
+
+      <h2 className={s.sectionTitle}>Metti da parte soldi veri</h2>
+      <div className={s.mempty}>
+        Il modo più semplice è usare la carta o il conto che hai già. Molte banche e carte prepagate (per esempio Revolut e N26)
+        permettono di creare uno spazio di risparmio separato e di impostare un versamento automatico ogni mese.
+        {pig.monthly > 0 ? ` Impostalo a ${fmt(pig.monthly)} al mese, la cifra che hai scelto qui sopra,` : " Scegli qui sopra quanto mettere via al mese, impostalo come versamento automatico"}
+        {" "}e aggiorna questo salvadanaio quando versi: così sai sempre a quale viaggio sei arrivato. I soldi restano sul tuo conto, Valigia Leggera non li tocca.
+      </div>
       <Footer />
     </div>
   );

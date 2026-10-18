@@ -4,7 +4,7 @@ import { PARTS, fmt, links } from "@/lib/viaggi/calcoli";
 import { versoIndirizzo } from "@/lib/viaggi/parametri";
 
 // Scheda di una meta, come il "biglietto" del prototipo
-export default function PassCard({ r, over, budget }) {
+export default function PassCard({ r, over, budget, piggy }) {
   const { d, parts, total, pp, p } = r;
   const diff = pp - budget;
   const L = links(r);
@@ -29,6 +29,14 @@ export default function PassCard({ r, over, budget }) {
           ))}
         </ul>
         {r.note && <p className={s.fine}>{r.note}</p>}
+        <div className={s.badges}>
+          <span className={s.badgeAi}><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0l1.8 5.2L15 7l-5.2 1.8L8 14l-1.8-5.2L1 7l5.2-1.8z" /></svg>Itinerario su misura</span>
+          {piggy && piggy.monthly > 0 && (() => {
+            const manca = Math.max(0, pp - piggy.saved);
+            const mesi = Math.ceil(manca / piggy.monthly);
+            return <span className={s.badgePig}>{manca === 0 ? "Salvadanaio: puoi già andarci" : `Salvadanaio: ci arrivi in ${mesi} ${mesi === 1 ? "mese" : "mesi"}`}</span>;
+          })()}
+        </div>
       </div>
       <div className={s.passStub}>
         <div className={s.pp}>{fmt(pp)}<small>a persona</small></div>

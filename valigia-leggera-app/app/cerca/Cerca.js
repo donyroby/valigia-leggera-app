@@ -47,6 +47,20 @@ export default function Cerca() {
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
   }, [st]);
 
+  // Salvadanaio dell'utente collegato: serve al segno "ci arrivi in N mesi" sulle schede
+  const [piggy, setPiggy] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from("piggy_bank").select("saved, monthly").eq("user_id", user.id).maybeSingle();
+        if (data) setPiggy({ saved: Number(data.saved) || 0, monthly: Number(data.monthly) || 0 });
+      } catch {}
+    })();
+  }, []);
+
   // Prezzi reali dei voli per partenza e date scelte (dal nostro server, in cache per 6 ore)
   const [voli, setVoli] = useState({ chiave: null, stato: "idle", mappa: null });
   const chiaveVoli = st ? `${st.from}|${st.date}|${st.ret}` : null;
@@ -98,7 +112,7 @@ export default function Cerca() {
   const etichettaCerca = destText.trim()
     ? "Calcola il viaggio"
     : inb.length ? `Mostra ${inb.length === 1 ? "la meta" : "le " + inb.length + " mete"} nel budget` : "Cerca";
-  const card = (r, isOver) => <PassCard key={r.d.id} r={r} over={isOver} budget={st.budget} />;
+  const card = (r, isOver) => <PassCard key={r.d.id} r={r} over={isOver} budget={st.budget} piggy={piggy} />;
   // Con tante mete, le card si mostrano a gruppi: si riparte dal primo gruppo a ogni nuova ricerca
   const chiaveElenco = [st.from, st.date, st.nights, st.people, st.profile, st.filter, st.budget, st.dest].join("|");
 
@@ -113,6 +127,10 @@ export default function Cerca() {
           Scrivila e vedi il costo del viaggio. Altrimenti lasciati ispirare dalle mete che stanno nel tuo budget.
         </p>
         <span className={s.demo}>Voli con prezzi reali, il resto stimato</span>
+        <div className={s.pillars}>
+          <div><b>Itinerario su misura</b><span>Scritto con l&apos;AI per chi viaggia con te, giorno per giorno, con i luoghi veri.</span></div>
+          <div><b>Salvadanaio di viaggio</b><span>Quanto mettere da parte ogni mese e quando ci arrivi.</span></div>
+        </div>
       </section>
 
       <form className={s.panel} aria-label="Parametri del viaggio" onSubmit={vaiAiRisultati}>

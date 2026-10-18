@@ -6,6 +6,7 @@ import TopBar from "@/components/TopBar";
 import SaveButton from "./SaveButton";
 import Condividi from "./Condividi";
 import ItinerarioClaude from "./ItinerarioClaude";
+import SalvadanaioMeta from "./SalvadanaioMeta";
 import { ALL } from "@/lib/viaggi/dati";
 import { conDettagli } from "@/lib/viaggi/dettagli";
 import { calc, links, itinerary, fmt, fmtD, seasonLabel, isHere, addDays, aviasalesUrl } from "@/lib/viaggi/calcoli";
@@ -105,16 +106,18 @@ export default async function MetaPage({ params, searchParams }) {
   const { data: { user } } = await supabase.auth.getUser();
   let savedId = null;
   // Itinerari su misura già creati per questa meta, quanti ne ha usati e se è premium
-  let itinSalvati = [], itinUsati = 0, premium = false;
+  let itinSalvati = [], itinUsati = 0, premium = false, piggy = null;
   if (user) {
-    const [it, cnt, pr] = await Promise.all([
+    const [it, cnt, pr, pg] = await Promise.all([
       supabase.from("itinerari").select("chiave, dati, created_at").eq("dest_id", d0.id).order("created_at", { ascending: true }),
       supabase.from("itinerari").select("id", { count: "exact", head: true }),
       supabase.from("premium").select("user_id").eq("user_id", user.id).maybeSingle(),
+      supabase.from("piggy_bank").select("saved, monthly, target").eq("user_id", user.id).maybeSingle(),
     ]);
     itinSalvati = it.data || [];
     itinUsati = cnt.count || 0;
     premium = !!pr.data;
+    piggy = pg.data || null;
   }
   if (user) {
     const { data } = await supabase.from("saved_trips").select("*").eq("destination_id", d.id);
@@ -162,7 +165,52 @@ export default async function MetaPage({ params, searchParams }) {
           <p className={s.empty}>Parti già da {d.name}: scegli un aeroporto di partenza diverso per vedere un costo sensato.</p>
         )}
 
-        <h2 className={s.h}>Quanto costa</h2>
+        <div className={s.totalBox}>
+          <span className={s.totalBig}>{fmt(total)}</span>
+          <a href="#costi">Vedi le voci</a>
+          <small>{p.nights} {p.nights === 1 ? "notte" : "notti"} · {p.people} {p.people === 1 ? "persona" : "persone"} · {fmt(pp)} a persona</small>
+          {budget != null && (
+            <span className={`${s.status} ${pp <= budget ? s.ok : s.no}`}>
+              {pp <= budget ? `Dentro il tuo budget di ${fmt(budget)} a persona` : `${fmt(pp - budget)} oltre il tuo budget di ${fmt(budget)} a persona`}
+            </span>
+          )}
+        </div>
+
+        <ItinerarioClaude
+          destId={d0.id} destName={d0.name} qs={qs} p={{ nights: p.nights, profile: p.profile, date: p.date, kids: p.kids, kidsAges: p.kidsAges }}
+          loggedIn={!!user} loginHref={`/accedi?next=${encodeURIComponent(here)}`}
+          salvati={itinSalvati} usatiIniziali={itinUsati} premium={premium}
+          esempio={<>
+        {it.map((day) => (
+          <div key={day.title} className={s.day}>
+            <h3>{day.title}</h3>
+            <ul>
+              {day.items.map(([slot, a], i) => {
+                const isPlace = (d.day.includes(a) || d.eve.includes(a)) && !a.gen;
+                return (
+                  <li key={slot + i}>
+                    <span>
+                      <b>{slot}</b>{a.n}
+                      {isPlace && <> <a className={s.map} href={mapsUrl(a.n, d.name)} target="_blank" rel="noopener noreferrer">mappa</a></>}
+                    </span>
+                    <span>{a.c ? "~" + a.c + " € a persona" : "gratis"}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className={s.hint}>{day.hint}</p>
+          </div>
+        ))}
+        {p.nights + 1 > 8 && <p className={s.fine}>Mostrati i primi 8 giorni.</p>}
+          </>}
+        />
+
+        <SalvadanaioMeta
+          loggedIn={!!user} loginHref={`/accedi?next=${encodeURIComponent(here)}`}
+          destId={d0.id} destName={d0.name} params={p} pp={pp} total={total} budget={budget} piggy={piggy} savedId={savedId}
+        />
+
+        <h2 className={s.h} id="costi">Quanto costa, voce per voce</h2>
         <table className={s.cost}>
           <tbody>
             {rows.map(([a, b, c]) => (
@@ -192,46 +240,12 @@ export default async function MetaPage({ params, searchParams }) {
             {linkVerifica && <a className={`${s.btn} ${s.sun}`} href={linkVerifica} target="_blank" rel="noopener noreferrer sponsored">Verifica il prezzo di oggi su Aviasales</a>}
           </div>
         )}
-        {budget != null && (
-          <p className={`${s.status} ${pp <= budget ? s.ok : s.no}`}>
-            {pp <= budget ? `Dentro il tuo budget di ${fmt(budget)} a persona` : `${fmt(pp - budget)} oltre il tuo budget di ${fmt(budget)} a persona`}
-          </p>
-        )}
-
         <div className={`${s.actions} ${s.noprint}`}>
           <SaveButton loggedIn={!!user} savedId={savedId} destId={d.id} params={p} pp={pp} budget={budget} here={here} />
         </div>
         <div className={s.actions}>
           <Condividi dest={d0} params={p} />
         </div>
-
-        <h2 className={s.h}>Itinerario proposto</h2>
-        {it.map((day) => (
-          <div key={day.title} className={s.day}>
-            <h3>{day.title}</h3>
-            <ul>
-              {day.items.map(([slot, a], i) => {
-                const isPlace = (d.day.includes(a) || d.eve.includes(a)) && !a.gen;
-                return (
-                  <li key={slot + i}>
-                    <span>
-                      <b>{slot}</b>{a.n}
-                      {isPlace && <> <a className={s.map} href={mapsUrl(a.n, d.name)} target="_blank" rel="noopener noreferrer">mappa</a></>}
-                    </span>
-                    <span>{a.c ? "~" + a.c + " € a persona" : "gratis"}</span>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className={s.hint}>{day.hint}</p>
-          </div>
-        ))}
-        {p.nights + 1 > 8 && <p className={s.fine}>Mostrati i primi 8 giorni.</p>}
-        <ItinerarioClaude
-          destId={d0.id} destName={d0.name} qs={qs} p={{ nights: p.nights, profile: p.profile, date: p.date }}
-          loggedIn={!!user} loginHref={`/accedi?next=${encodeURIComponent(here)}`}
-          salvati={itinSalvati} usatiIniziali={itinUsati} premium={premium}
-        />
 
         <p className={s.sumline}><b>La tua ricerca:</b> {L.sum}</p>
         {r.note && <p className={s.fine}>{r.note}</p>}

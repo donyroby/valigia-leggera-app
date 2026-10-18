@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import s from "@/components/viaggi.module.css";
-import { TEMI, ETICHETTA_PULSANTE, GRATUITI, chiaveItinerario, temiValidi } from "@/lib/itinerari/temi";
+import { TEMI_SCELTA, ETICHETTA_PULSANTE, GRATUITI, chiaveItinerario, temiValidi, etaBambini } from "@/lib/itinerari/temi";
 
 const mapsUrl = (name, city) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + ", " + city);
 const ERRORI = {
@@ -50,7 +50,7 @@ function Giorni({ days, destName }) {
   ));
 }
 
-export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, loginHref, salvati, usatiIniziali, premium }) {
+export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, loginHref, salvati, usatiIniziali, premium, esempio }) {
   const [temi, setTemi] = useState(["classico"]);
   const [mappa, setMappa] = useState(() => Object.fromEntries((salvati || []).map((x) => [x.chiave, x.dati])));
   const [usati, setUsati] = useState(usatiIniziali || 0);
@@ -118,11 +118,28 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     }
   }
 
+  const kids = etaBambini(p);
+  const etaTxt = kids.map((x) => (x < 1 ? "meno di 1 anno" : x + (x === 1 ? " anno" : " anni"))).join(", ");
+  const stella = <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0l1.8 5.2L15 7l-5.2 1.8L8 14l-1.8-5.2L1 7l5.2-1.8z" /></svg>;
+
   const chips = (
     <div className={s.chips} role="group" aria-label="Tipo di itinerario">
-      {TEMI.map(([k, l]) => (
+      {TEMI_SCELTA.map(([k, l]) => (
         <button key={k} type="button" className={s.chip} aria-pressed={temi.includes(k)} onClick={() => tocca(k)} disabled={stato.fase === "carico"}>{l}</button>
       ))}
+    </div>
+  );
+  const bambini = kids.length > 0 && (
+    <p className={s.aiFixed}>
+      <b>✓ Adatto {kids.length === 1 ? `a un bambino di ${etaTxt}` : `ai bambini (${etaTxt})`}</b>
+      <span>Sempre incluso: scegli liberamente fino a due temi.</span>
+    </p>
+  );
+  const errBox = stato.fase === "errore" && <p className={s.aiErr} role="alert">{stato.msg}</p>;
+  const meta = (
+    <div className={s.aiMeta}>
+      <span>Pronto in circa 20 secondi</span>
+      {loggedIn && (premium ? <span>Account premium</span> : <span>{restanti} gratuiti su {GRATUITI}</span>)}
     </div>
   );
 
@@ -131,69 +148,77 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     const msg = sec < 8 ? `Sto pensando ai luoghi giusti a ${destName}…` : sec < 45 ? "Sto scrivendo l'itinerario…" : "Ci sto mettendo più del solito, ma sto ancora lavorando…";
     const pronti = stato.parziale?.length || 0;
     azione = (
-      <div className={s.genbox}>
+      <>
         {pronti > 0 && (
-          <div style={{ justifySelf: "stretch" }}>
-            <p className={s.fine}>Ecco i primi giorni del tuo itinerario per {destName}: gli altri arrivano tra poco.</p>
+          <div className={s.aiResult}>
+            <p className={s.fine} style={{ marginTop: 0 }}>Ecco i primi giorni: gli altri arrivano tra poco.</p>
             <Giorni days={stato.parziale} destName={destName} />
           </div>
         )}
-        <p className={s.fine} role="status">{pronti > 0 ? "Sto scrivendo il resto dell'itinerario…" : msg} · {sec} s</p>
-        <button type="button" className={`${s.btn} ${s.ghost}`} onClick={() => ctl.current?.abort()}>Annulla</button>
-      </div>
+        <p role="status">{pronti > 0 ? "Sto scrivendo il resto dell'itinerario…" : msg} · {sec} s</p>
+        <button type="button" className={`${s.btn} ${s.aiGhost}`} onClick={() => ctl.current?.abort()}>Annulla</button>
+      </>
     );
   } else if (!loggedIn) {
     azione = (
-      <div className={s.genbox}>
-        <Link className={`${s.btn} ${s.sun}`} href={loginHref}>Accedi per creare il tuo itinerario</Link>
-        <p className={s.fine}>Con l&apos;account hai {GRATUITI} itinerari su misura gratuiti.</p>
-      </div>
+      <>
+        <Link className={`${s.btn} ${s.aiCta}`} href={loginHref}>Accedi per creare il tuo itinerario</Link>
+        <p>Con l&apos;account hai {GRATUITI} itinerari su misura gratuiti.</p>
+      </>
     );
   } else if (!dati && restanti === 0) {
-    azione = <div className={s.genbox}><p className={`${s.status} ${s.no}`}>{ERRORI.limite}</p></div>;
+    azione = <p className={s.aiErr}>{ERRORI.limite}</p>;
   } else if (!dati) {
     const lab = temi.length === 1 ? ETICHETTA_PULSANTE[temi[0]] : "Crea itinerario combinato";
     azione = (
-      <div className={s.genbox}>
-        {stato.fase === "errore" && <p className={`${s.status} ${s.no}`}>{stato.msg}</p>}
-        <button type="button" className={`${s.btn} ${s.sun}`} onClick={() => crea(false)}>{lab}</button>
-        <p className={s.fine}>
-          Claude sceglie luoghi reali della città, adatti al tuo profilo, alla durata e alla stagione, con il link alla mappa per verificarli.
-          Di solito serve meno di un minuto.
-          {restanti != null && ` Ti ${restanti === 1 ? "resta 1 itinerario gratuito" : `restano ${restanti} itinerari gratuiti`} su ${GRATUITI}.`}
-        </p>
-      </div>
+      <>
+        {errBox}
+        <button type="button" className={`${s.btn} ${s.aiCta}`} onClick={() => crea(false)}>{lab}</button>
+        {meta}
+      </>
     );
   }
 
-  return (
-    <section>
-      <h2 className={s.h}>Itinerario su misura</h2>
-      <p className={s.fine}>Scegli il tipo di viaggio: puoi combinare fino a due temi.</p>
-      {chips}
-      {dati && stato.fase !== "carico" ? (
+  const risultato = dati && stato.fase !== "carico" && (
+    <>
+      <div className={s.aiResult}>
+        <p className={s.fine} style={{ marginTop: 0 }}>Ogni tappa ha il link alla mappa: prima di partire verifica orari, aperture e prezzi.</p>
+        <Giorni days={dati.days} destName={destName} />
+        {dati.food?.length > 0 && (
+          <div className={s.day}>
+            <h3>Da assaggiare</h3>
+            <ul>
+              {dati.food.map((f, j) => (
+                <li key={j}><span><a className={s.map} href={mapsUrl(f.name, destName)} target="_blank" rel="noopener noreferrer">{f.name}</a><br /><small>{f.what}</small></span><span></span></li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      {loggedIn && (restanti === null || restanti > 0) && (
         <>
-          <p className={s.fine}>Itinerario creato da Claude per {destName}. Ogni tappa ha il link alla mappa: prima di partire verifica orari, aperture e prezzi.</p>
-          <Giorni days={dati.days} destName={destName} />
-          {dati.food?.length > 0 && (
-            <div className={s.day}>
-              <h3>Da assaggiare</h3>
-              <ul>
-                {dati.food.map((f, j) => (
-                  <li key={j}><span><a className={s.map} href={mapsUrl(f.name, destName)} target="_blank" rel="noopener noreferrer">{f.name}</a><br /><small>{f.what}</small></span><span></span></li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {loggedIn && (restanti === null || restanti > 0) && (
-            <div className={s.genbox}>
-              {stato.fase === "errore" && <p className={`${s.status} ${s.no}`}>{stato.msg}</p>}
-              <button type="button" className={`${s.btn} ${s.ghost}`} onClick={() => crea(true)}>Rigenera itinerario</button>
-              <p className={s.fine}>Rigenerare usa un nuovo itinerario{restanti != null ? `: te ne ${restanti === 1 ? "resta 1" : `restano ${restanti}`} su ${GRATUITI}` : ""}.</p>
-            </div>
-          )}
+          {errBox}
+          <button type="button" className={`${s.btn} ${s.aiGhost}`} onClick={() => crea(true)}>Rigenera itinerario</button>
+          <p>Rigenerare usa un nuovo itinerario{restanti != null ? `: te ne ${restanti === 1 ? "resta 1" : `restano ${restanti}`} su ${GRATUITI}` : ""}.</p>
         </>
-      ) : azione}
+      )}
+    </>
+  );
+
+  return (
+    <section className={s.aibox} aria-labelledby="ai-titolo">
+      <span className={s.aiKicker}>{stella}Scritto con l&apos;AI per te</span>
+      <h2 id="ai-titolo">Il tuo itinerario su misura a {destName}</h2>
+      <p>Luoghi veri, giorno per giorno, adatti a chi viaggia e alla stagione. Scegli fino a due temi.</p>
+      {chips}
+      {bambini}
+      {risultato || azione}
+      {!dati && esempio && (
+        <details className={s.aiSample}>
+          <summary>Vedi un esempio di itinerario</summary>
+          <div className={s.aiResult}>{esempio}</div>
+        </details>
+      )}
     </section>
   );
 }
