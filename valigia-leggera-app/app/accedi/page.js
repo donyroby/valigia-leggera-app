@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Brand from "@/components/Brand";
 import Footer from "@/components/Footer";
 import TopBar from "@/components/TopBar";
 import sv from "@/components/viaggi.module.css";
@@ -26,11 +25,10 @@ export default async function AccediPage({ searchParams }) {
     <>
     <div className={sv.page}><TopBar /></div>
     <main className="card">
-      <Brand />
       <h1>Accedi</h1>
       <p>
-        Scrivi la tua email: ti mandiamo un link per entrare. Niente password da
-        ricordare, e se è la prima volta l&apos;account si crea da solo.
+        Entra con il tuo account Google, oppure scrivi la tua email: ti mandiamo un codice da inserire qui.
+        Niente password da ricordare, e se è la prima volta l&apos;account si crea da solo.
       </p>
       {eliminato && (
         <p className="ok" role="status">

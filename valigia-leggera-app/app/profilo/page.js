@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Brand from "@/components/Brand";
 import Footer from "@/components/Footer";
 import TopBar from "@/components/TopBar";
 import sv from "@/components/viaggi.module.css";
@@ -29,7 +28,6 @@ export default async function ProfiloPage() {
     <>
     <div className={sv.page}><TopBar /></div>
     <main className="card">
-      <Brand />
       <h1>Il tuo profilo</h1>
       <p>
         Hai fatto l&apos;accesso come <strong>{user.email}</strong>.

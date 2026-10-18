@@ -22,7 +22,7 @@ export default function Privacy() {
       <h2>Quali dati raccogliamo</h2>
       <p>Puoi usare la ricerca, le schede delle mete e le idee low cost senza account e senza darci alcun dato personale. Se crei un account conserviamo:</p>
       <ul>
-        <li><strong>Email</strong>, per farti accedere con il link magico.</li>
+        <li><strong>Email</strong>, per farti accedere con il codice o il link via email. Se scegli &quot;Continua con Google&quot;, Google ci comunica solo la tua email, il nome e l&apos;immagine del profilo: non riceviamo la tua password né altri dati del tuo account Google.</li>
         <li><strong>Dati tecnici dell&apos;account</strong>: data di creazione, ultimo accesso e le informazioni tecniche che i sistemi di accesso e di hosting registrano per sicurezza (per esempio indirizzo IP e tipo di browser).</li>
         <li><strong>Profilo</strong>: il nome con cui vuoi essere chiamato, se lo inserisci, e con chi viaggi di solito.</li>
         <li><strong>Viaggi salvati</strong>: meta, aeroporto di partenza, date, numero di persone, numero ed età dei bambini (senza nomi), budget e preferenze del viaggio.</li>
@@ -59,6 +59,7 @@ export default function Privacy() {
         <li><strong>Supabase</strong>: database e sistema di accesso, con i dati conservati su server in Irlanda (Unione europea).</li>
         <li><strong>Netlify</strong>: hosting del sito, con sede negli Stati Uniti. Gli eventuali trasferimenti fuori dall&apos;Unione europea avvengono sulla base delle garanzie previste dal GDPR, come le decisioni di adeguatezza o le clausole contrattuali standard.</li>
         <li><strong>Brevo</strong>: invio delle email di accesso, azienda con sede in Francia (Unione europea).</li>
+        <li><strong>Google</strong> (Google Ireland Ltd): solo se scegli &quot;Continua con Google&quot;, per confermare la tua identità all&apos;accesso.</li>
         <li><strong>GoatCounter</strong>: statistiche anonime delle visite, senza cookie, con i dati conservati su server in Germania e Finlandia (Unione europea).</li>
         <li><strong>Sentry</strong> (Functional Software Inc., Stati Uniti): segnalazione degli errori tecnici del sito, con i dati conservati su server nell&apos;Unione europea (Germania).</li>
         <li><strong>Anthropic</strong> (Anthropic PBC, Stati Uniti): scrittura degli itinerari su misura con il modello Claude. Inviamo solo i dati del viaggio (meta, data, durata, tipo di viaggio e temi scelti), mai la tua email o altri dati dell&apos;account. Gli eventuali trasferimenti fuori dall&apos;Unione europea avvengono sulla base delle garanzie previste dal GDPR.</li>
