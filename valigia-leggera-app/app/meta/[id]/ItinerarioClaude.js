@@ -22,6 +22,34 @@ const ERRORI = {
 // Il codice tra parentesi aiuta a capire il problema se qualcuno lo segnala
 const errore = (c) => ERRORI[c] || `Qualcosa è andato storto. Riprova tra poco.${c ? ` (codice: ${c})` : ""}`;
 
+// Frase "perché andarci" + piatto da provare, con la punteggiatura giusta
+const descrizione = (a) => {
+  const w = (a.what || "").trim();
+  if (!a.dish) return w;
+  return (w && !/[.!?…]$/.test(w) ? w + "." : w) + (w ? " " : "") + `Da provare: ${a.dish}.`;
+};
+
+function Giorni({ days, destName }) {
+  return days.map((g, i) => (
+    <div key={i} className={s.day}>
+      <h3>{g.title}</h3>
+      <ul>
+        {g.items.map((a, j) => (
+          <li key={j}>
+            <span>
+              <b>{a.slot}</b><a className={s.map} href={mapsUrl(a.name, destName)} target="_blank" rel="noopener noreferrer">{a.name}</a>
+              {a.area && <small> ({a.area})</small>}
+              {(a.what || a.dish) && <><br /><small>{descrizione(a)}</small></>}
+            </span>
+            <span>{a.cost === 0 ? "gratis" : typeof a.cost === "number" ? `~${a.cost} € a persona` : ""}</span>
+          </li>
+        ))}
+      </ul>
+      {g.tip && <p className={s.hint}>{g.tip}</p>}
+    </div>
+  ));
+}
+
 export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, loginHref, salvati, usatiIniziali, premium }) {
   const [temi, setTemi] = useState(["classico"]);
   const [mappa, setMappa] = useState(() => Object.fromEntries((salvati || []).map((x) => [x.chiave, x.dati])));
@@ -81,6 +109,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
         const st = await r.json().catch(() => ({}));
         if (st.stato === "ok" && st.dati) return finito(st);
         if (st.stato === "errore") return setStato({ fase: "errore", msg: errore(st.codice) });
+        if (st.parziale?.length) setStato({ fase: "carico", parziale: st.parziale });
       }
       setStato({ fase: "errore", msg: errore("tempo") });
     } catch (e) {
@@ -100,9 +129,16 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
   let azione;
   if (stato.fase === "carico") {
     const msg = sec < 8 ? `Sto pensando ai luoghi giusti a ${destName}…` : sec < 45 ? "Sto scrivendo l'itinerario…" : "Ci sto mettendo più del solito, ma sto ancora lavorando…";
+    const pronti = stato.parziale?.length || 0;
     azione = (
       <div className={s.genbox}>
-        <p className={s.fine} role="status">{msg} · {sec} s</p>
+        {pronti > 0 && (
+          <div style={{ justifySelf: "stretch" }}>
+            <p className={s.fine}>Ecco i primi giorni del tuo itinerario per {destName}: gli altri arrivano tra poco.</p>
+            <Giorni days={stato.parziale} destName={destName} />
+          </div>
+        )}
+        <p className={s.fine} role="status">{pronti > 0 ? "Sto scrivendo il resto dell'itinerario…" : msg} · {sec} s</p>
         <button type="button" className={`${s.btn} ${s.ghost}`} onClick={() => ctl.current?.abort()}>Annulla</button>
       </div>
     );
@@ -138,24 +174,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
       {dati && stato.fase !== "carico" ? (
         <>
           <p className={s.fine}>Itinerario creato da Claude per {destName}. Ogni tappa ha il link alla mappa: prima di partire verifica orari, aperture e prezzi.</p>
-          {dati.days.map((g, i) => (
-            <div key={i} className={s.day}>
-              <h3>{g.title}</h3>
-              <ul>
-                {g.items.map((a, j) => (
-                  <li key={j}>
-                    <span>
-                      <b>{a.slot}</b><a className={s.map} href={mapsUrl(a.name, destName)} target="_blank" rel="noopener noreferrer">{a.name}</a>
-                      {a.area && <small> ({a.area})</small>}
-                      {(a.what || a.dish) && <><br /><small>{a.what}{a.dish ? ` Da provare: ${a.dish}.` : ""}</small></>}
-                    </span>
-                    <span>{a.cost === 0 ? "gratis" : typeof a.cost === "number" ? `~${a.cost} € a persona` : ""}</span>
-                  </li>
-                ))}
-              </ul>
-              {g.tip && <p className={s.hint}>{g.tip}</p>}
-            </div>
-          ))}
+          <Giorni days={dati.days} destName={destName} />
           {dati.food?.length > 0 && (
             <div className={s.day}>
               <h3>Da assaggiare</h3>

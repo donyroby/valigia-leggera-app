@@ -80,7 +80,7 @@ export async function GET(request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return json({ codice: "accedi" }, 401);
 
-  const { data: riga } = await supabase.from("itinerari_lavori").select("chiave, stato, codice, created_at").eq("id", lavoro).maybeSingle();
+  const { data: riga } = await supabase.from("itinerari_lavori").select("chiave, stato, codice, parziale, created_at").eq("id", lavoro).maybeSingle();
   if (!riga) return json({ stato: "errore", codice: "lavoro" });
   if (riga.stato === "errore") return json({ stato: "errore", codice: riga.codice || "servizio" });
   if (riga.stato === "ok") {
@@ -92,5 +92,5 @@ export async function GET(request) {
     return json({ stato: "errore", codice: "salvataggio" });
   }
   if (Date.now() - new Date(riga.created_at).getTime() > ATTESA_MASSIMA) return json({ stato: "errore", codice: "tempo" });
-  return json({ stato: riga.stato }); // nuovo (non ancora partito) oppure in_corso
+  return json({ stato: riga.stato, parziale: riga.parziale?.days || null }); // nuovo (non ancora partito) oppure in_corso, con i giorni già pronti
 }

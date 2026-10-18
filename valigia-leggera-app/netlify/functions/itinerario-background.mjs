@@ -3,7 +3,7 @@
 // Il browser riceve subito 202; il risultato lo legge poi dal sito (GET /api/itinerario?lavoro=…).
 // Accesso a Supabase con il token dell'utente: valgono le stesse regole (RLS) del sito.
 import { verifica } from "../../lib/itinerari/firma.mjs";
-import { leggiItinerario } from "../../lib/itinerari/leggi.mjs";
+import { leggiItinerario, giorniParziali } from "../../lib/itinerari/leggi.mjs";
 
 const MODELLO = "claude-sonnet-5-5";
 const GRATUITI = 3; // come lib/itinerari/temi.js
@@ -56,7 +56,7 @@ async function esegui(req) {
         method: "POST",
         signal: AbortSignal.timeout(180000),
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: MODELLO, max_tokens: 10000, messages: [{ role: "user", content: L.prompt }] }),
+        body: JSON.stringify({ model: MODELLO, max_tokens: 10000, stream: true, messages: [{ role: "user", content: L.prompt }] }),
       });
     } catch (e) {
       return fallisci(e?.name === "TimeoutError" ? "tempo" : "rete", { errore: String(e).slice(0, 200) });
@@ -65,19 +65,44 @@ async function esegui(req) {
     if (sovraccarico && tentativo === 1) { await new Promise((r) => setTimeout(r, 8000)); continue; }
     break;
   }
-  const secondi = Math.round((Date.now() - t0) / 1000);
-  if (!risposta.ok) {
+  if (!risposta.ok || !risposta.body) {
     const testo = (await risposta.text().catch(() => "")).slice(0, 300);
     const codice = risposta.status === 429 || risposta.status === 529 ? "occupato" : risposta.status === 400 || risposta.status === 402 ? "credito" : "servizio";
-    return fallisci(codice, { http: risposta.status, secondi, testo });
+    return fallisci(codice, { http: risposta.status, testo });
   }
-  const msg = await risposta.json();
-  const testo = (msg.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+
+  // Legge il testo man mano: ogni giorno completo viene salvato subito nel lavoro, così il sito lo mostra
+  let testo = "", motivo = null, erroreStream = null, mostrati = 0, tokenUscita = null;
+  try {
+    const reader = risposta.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) {
+        const blocco = buf.slice(0, i); buf = buf.slice(i + 2);
+        const riga = blocco.split("\n").find((l) => l.startsWith("data:"));
+        if (!riga) continue;
+        let ev; try { ev = JSON.parse(riga.slice(5)); } catch { continue; }
+        if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") testo += ev.delta.text;
+        else if (ev.type === "message_delta") { motivo = ev.delta?.stop_reason || motivo; tokenUscita = ev.usage?.output_tokens ?? tokenUscita; }
+        else if (ev.type === "error") erroreStream = ev.error;
+      }
+      const giorni = giorniParziali(testo);
+      if (giorni.length > mostrati) { mostrati = giorni.length; await segna({ parziale: { days: giorni } }); }
+    }
+  } catch (e) {
+    return fallisci(e?.name === "TimeoutError" ? "tempo" : "interrotto", { errore: String(e).slice(0, 200), caratteri: testo.length });
+  }
+  const secondi = Math.round((Date.now() - t0) / 1000);
+  if (erroreStream) return fallisci(erroreStream.type === "overloaded_error" ? "occupato" : "interrotto", { secondi, errore: JSON.stringify(erroreStream).slice(0, 300) });
   const dati = leggiItinerario(testo);
-  if (!dati) return fallisci(msg.stop_reason === "max_tokens" ? "lungo" : "lettura", { secondi, motivo: msg.stop_reason, inizio: testo.slice(0, 200), fine: testo.slice(-200) });
+  if (!dati) return fallisci(motivo === "max_tokens" ? "lungo" : "lettura", { secondi, motivo, inizio: testo.slice(0, 200), fine: testo.slice(-200) });
 
   const salva = await db("itinerari", { method: "POST", body: JSON.stringify({ user_id: L.uid, chiave: L.chiave, dest_id: L.dest, temi: L.temi, dati }) });
   if (!salva.ok) return fallisci("salvataggio", { http: salva.status, testo: (await salva.text().catch(() => "")).slice(0, 300) });
   await segna({ stato: "ok" });
-  console.log("Itinerario creato", { dest: L.dest, temi: L.temi.join("+"), secondi, token_uscita: msg.usage?.output_tokens });
+  console.log("Itinerario creato", { dest: L.dest, temi: L.temi.join("+"), secondi, token_uscita: tokenUscita });
 }
