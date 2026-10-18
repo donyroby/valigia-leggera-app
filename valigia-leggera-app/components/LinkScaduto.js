@@ -13,15 +13,17 @@ export default function LinkScaduto() {
     const q = new URLSearchParams(window.location.search);
     const errHash = /(^#|&)error(_code)?=/.test(h);
     const errQuery = q.get("errore") === "link";
-    if (!errHash && !errQuery) return;
+    const codice = q.has("code"); // residuo del link appena usato
+    if (!errHash && !errQuery && !codice) return;
     (async () => {
       let user = null;
       try { ({ data: { user } } = await createClient().auth.getUser()); } catch {}
       if (user) {
         q.delete("errore");
+        if (codice) { q.delete("code"); q.delete("next"); }
         const resto = q.toString();
         window.history.replaceState(null, "", window.location.pathname + (resto ? "?" + resto : ""));
-      } else if (!path.startsWith("/accedi") || errHash) {
+      } else if (errHash || (errQuery && !path.startsWith("/accedi"))) {
         router.replace("/accedi?errore=link");
       }
     })();

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
 import Footer from "@/components/Footer";
+import TopBar from "@/components/TopBar";
+import sv from "@/components/viaggi.module.css";
 import ProfileForm from "./ProfileForm";
 import IMieiDati from "./IMieiDati";
 import { createClient } from "@/lib/supabase/server";
@@ -25,6 +27,7 @@ export default async function ProfiloPage() {
 
   return (
     <>
+    <div className={sv.page}><TopBar /></div>
     <main className="card">
       <Brand />
       <h1>Il tuo profilo</h1>

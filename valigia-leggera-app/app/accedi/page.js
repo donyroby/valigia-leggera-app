@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Brand from "@/components/Brand";
 import Footer from "@/components/Footer";
+import TopBar from "@/components/TopBar";
+import sv from "@/components/viaggi.module.css";
 import LoginForm from "./LoginForm";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,6 +24,7 @@ export default async function AccediPage({ searchParams }) {
 
   return (
     <>
+    <div className={sv.page}><TopBar /></div>
     <main className="card">
       <Brand />
       <h1>Accedi</h1>
