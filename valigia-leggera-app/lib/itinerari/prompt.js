@@ -44,11 +44,9 @@ Viaggiatori: ${who}. Partenza ${p.date}, ${p.nights} notti, ${seasonLabel(p.date
 
 Sii conciso: "what" al massimo 12 parole, "tip" al massimo 15 parole, "area" solo il quartiere o la via. Non aggiungere tappe oltre quelle richieste.
 
-Nel campo "kind" scrivi "c" per mercati, locali, botteghe, cantine e assaggi (cibo), "v" per tutto il resto (visita).
-
-Rispondi SOLO con JSON compatto, senza testo prima o dopo. Ogni tappa è un array nell'ordine [slot, kind, name, area, what, dish, cost]; ogni voce di "food" è un array [name, what]:
-{"days":[{"title":"titolo del giorno","items":[["Mattina","v","nome esatto del luogo","quartiere o via","una frase breve","",0]],"tip":"consiglio pratico breve"}],"food":[["nome del locale o piatto","una frase breve"]]}
-In "dish" metti il piatto o prodotto tipico solo per le tappe di cibo del tema enogastronomico, altrimenti stringa vuota. In "cost" un numero, 0 se gratuito, null se non lo sai.`;
+Nel campo "kind" scrivi "cibo" per mercati, locali, botteghe, cantine e assaggi, "visita" per tutto il resto.
+In "dish" metti il piatto o prodotto tipico solo per le tappe di cibo del tema enogastronomico, altrimenti stringa vuota. In "cost" un numero intero, 0 se gratuito, null se non lo sai.
+La risposta è solo il JSON dell'itinerario: "days" con "title", "items" (slot, kind, name, area, what, dish, cost) e "tip"; "food" con "name" e "what".`;
 }
 
 // La lettura della risposta sta in leggi.mjs (la usa anche la funzione in background)

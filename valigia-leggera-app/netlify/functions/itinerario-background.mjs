@@ -4,6 +4,7 @@
 // Accesso a Supabase con il token dell'utente: valgono le stesse regole (RLS) del sito.
 import { verifica } from "../../lib/itinerari/firma.mjs";
 import { leggiItinerario, giorniParziali } from "../../lib/itinerari/leggi.mjs";
+import { SCHEMA_ITINERARIO } from "../../lib/itinerari/schema.mjs";
 
 const MODELLO = "claude-sonnet-5-5";
 const GRATUITI = 3; // come lib/itinerari/temi.js
@@ -56,7 +57,14 @@ async function esegui(req) {
         method: "POST",
         signal: AbortSignal.timeout(180000),
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: MODELLO, max_tokens: 10000, stream: true, messages: [{ role: "user", content: L.prompt }] }),
+        // Niente ragionamento iniziale ("between_tools"), impegno medio e risposta vincolata allo schema JSON:
+        // senza, Sonnet 5.5 pensa o fa la brutta copia nel testo (~9000 token, ~60 s) prima del JSON
+        body: JSON.stringify({
+          model: MODELLO, max_tokens: 8000, stream: true,
+          thinking: { type: "between_tools" },
+          output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA_ITINERARIO } },
+          messages: [{ role: "user", content: L.prompt }],
+        }),
       });
     } catch (e) {
       return fallisci(e?.name === "TimeoutError" ? "tempo" : "rete", { errore: String(e).slice(0, 200) });
@@ -67,12 +75,12 @@ async function esegui(req) {
   }
   if (!risposta.ok || !risposta.body) {
     const testo = (await risposta.text().catch(() => "")).slice(0, 300);
-    const codice = risposta.status === 429 || risposta.status === 529 ? "occupato" : risposta.status === 400 || risposta.status === 402 ? "credito" : "servizio";
+    const codice = risposta.status === 429 || risposta.status === 529 ? "occupato" : /credit/i.test(testo) ? "credito" : `api_${risposta.status}`;
     return fallisci(codice, { http: risposta.status, testo });
   }
 
   // Legge il testo man mano: ogni giorno completo viene salvato subito nel lavoro, così il sito lo mostra
-  let testo = "", motivo = null, erroreStream = null, mostrati = 0, tokenUscita = null;
+  let testo = "", motivo = null, erroreStream = null, mostrati = 0, tokenUscita = null, primoTesto = null;
   try {
     const reader = risposta.body.getReader(), dec = new TextDecoder();
     let buf = "";
@@ -86,7 +94,7 @@ async function esegui(req) {
         const riga = blocco.split("\n").find((l) => l.startsWith("data:"));
         if (!riga) continue;
         let ev; try { ev = JSON.parse(riga.slice(5)); } catch { continue; }
-        if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") testo += ev.delta.text;
+        if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") { testo += ev.delta.text; primoTesto ??= Math.round((Date.now() - t0) / 1000); }
         else if (ev.type === "message_delta") { motivo = ev.delta?.stop_reason || motivo; tokenUscita = ev.usage?.output_tokens ?? tokenUscita; }
         else if (ev.type === "error") erroreStream = ev.error;
       }
@@ -104,5 +112,5 @@ async function esegui(req) {
   const salva = await db("itinerari", { method: "POST", body: JSON.stringify({ user_id: L.uid, chiave: L.chiave, dest_id: L.dest, temi: L.temi, dati }) });
   if (!salva.ok) return fallisci("salvataggio", { http: salva.status, testo: (await salva.text().catch(() => "")).slice(0, 300) });
   await segna({ stato: "ok" });
-  console.log("Itinerario creato", { dest: L.dest, temi: L.temi.join("+"), secondi, token_uscita: tokenUscita });
+  console.log("Itinerario creato", { dest: L.dest, temi: L.temi.join("+"), secondi, primo_testo_dopo: primoTesto, token_uscita: tokenUscita });
 }
