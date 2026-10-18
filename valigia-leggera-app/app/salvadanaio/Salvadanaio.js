@@ -11,6 +11,7 @@ import { statoIniziale, sistemaStato } from "@/lib/viaggi/ricerca";
 import { versoIndirizzo } from "@/lib/viaggi/parametri";
 import { meteAdesso, obiettivo, obiettiviViaggi, lineaDelTempo, piggyDate, NOTTI_SALVADANAIO } from "@/lib/viaggi/salvadanaio";
 import { createClient } from "@/lib/supabase/client";
+import { evento } from "@/lib/statistiche";
 
 const mesiTxt = (m) => "circa " + m + (m === 1 ? " mese" : " mesi") + " al ritmo scelto";
 
@@ -43,7 +44,7 @@ export default function Salvadanaio({ userId, initial, trips, defaultProfile }) 
     return () => clearTimeout(t);
   }, [pig, userId]);
 
-  const add = (n) => { const v = Math.round(n); if (v > 0) setPig((p) => ({ ...p, saved: p.saved + v })); };
+  const add = (n) => { const v = Math.round(n); if (v > 0) { setPig((p) => ({ ...p, saved: p.saved + v })); evento("salvadanaio-aggiunta", "Soldi aggiunti al salvadanaio"); } };
   const total = Math.max(0, pig.saved);
 
   const calcoli = useMemo(() => {

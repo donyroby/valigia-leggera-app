@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ALL, MESI } from "@/lib/viaggi/dati";
 import { fmt, fmtD } from "@/lib/viaggi/calcoli";
 import { versoRiga } from "@/lib/viaggi/parametri";
+import { evento } from "@/lib/statistiche";
 
 // "a maggio 2027", "ad aprile 2027"
 const aMeseAnno = (n) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + n); const m = MESI[d.getMonth()]; return (/^[aeiou]/.test(m) ? "ad " : "a ") + m + " " + d.getFullYear(); };
@@ -47,6 +48,7 @@ export default function SalvadanaioMeta({ loggedIn, loginHref, destId, destName,
       user_id: user.id, saved, monthly, target: Number(piggy?.target) || 0, updated_at: new Date().toISOString(),
     });
     setStato(ok && !e2 ? "fatto" : "errore");
+    if (ok && !e2) evento("salvadanaio-meta", "Salvadanaio attivato da una meta");
   }
 
   return (

@@ -6,6 +6,7 @@ import s from "@/components/viaggi.module.css";
 import { createClient } from "@/lib/supabase/client";
 import { ALL } from "@/lib/viaggi/dati";
 import { versoRiga } from "@/lib/viaggi/parametri";
+import { evento } from "@/lib/statistiche";
 
 export default function SaveButton({ loggedIn, savedId, destId, params, pp, budget, here }) {
   const [id, setId] = useState(savedId);
@@ -39,6 +40,7 @@ export default function SaveButton({ loggedIn, savedId, destId, params, pp, budg
       .single();
     if (error) { setStatus("error"); return; }
     setId(data.id); setStatus("idle");
+    evento("viaggio-salvato", "Viaggio salvato");
   }
 
   async function rimuovi() {

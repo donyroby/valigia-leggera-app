@@ -2,6 +2,7 @@
 // Itinerario su misura scritto da Claude: temi, creazione con avanzamento, risultato con link alle mappe.
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { evento } from "@/lib/statistiche";
 import s from "@/components/viaggi.module.css";
 import { TEMI_SCELTA, ETICHETTA_PULSANTE, GRATUITI, chiaveItinerario, temiValidi, etaBambini } from "@/lib/itinerari/temi";
 
@@ -61,6 +62,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
   const chiave = chiaveItinerario(destId, p, temi);
   const dati = mappa[chiave];
   const restanti = premium ? null : Math.max(0, GRATUITI - usati);
+  const kids = etaBambini(p);
 
   useEffect(() => {
     if (stato.fase !== "carico") return;
@@ -84,6 +86,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     setSec(0);
     setStato({ fase: "carico" });
     const finito = (j) => {
+      if (!j.giaPronto) evento(rigenera ? "itinerario-rigenerato" : "itinerario-creato", `Itinerario ${rigenera ? "rigenerato" : "creato"} (${temi.join("+")}${kids.length ? ", con bambini" : ""})`);
       setMappa((m) => ({ ...m, [chiave]: j.dati }));
       if (typeof j.usati === "number") setUsati(j.usati);
       setStato({ fase: "pronto" });
@@ -95,7 +98,10 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
       });
       const j = await res.json().catch(() => ({ codice: `http_${res.status}` }));
       if (j.dati) return finito(j);
-      if (!j.lavoro) return setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
+      if (!j.lavoro) {
+        if (j.codice === "limite") evento("itinerario-limite", "Limite gratuito raggiunto");
+        return setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
+      }
 
       const av = await fetch("/.netlify/functions/itinerario-background", {
         method: "POST", signal, headers: { "content-type": "application/json" }, body: JSON.stringify(j.avvio),
@@ -118,7 +124,6 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     }
   }
 
-  const kids = etaBambini(p);
   const etaTxt = kids.map((x) => (x < 1 ? "meno di 1 anno" : x + (x === 1 ? " anno" : " anni"))).join(", ");
   const stella = <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0l1.8 5.2L15 7l-5.2 1.8L8 14l-1.8-5.2L1 7l5.2-1.8z" /></svg>;
 
