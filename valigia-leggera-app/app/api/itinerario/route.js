@@ -1,17 +1,27 @@
-// Crea un itinerario su misura con Claude (Anthropic API) e lo salva nell'account.
-// Regole: serve l'accesso; 3 itinerari gratuiti in tutto per account, poi premium (tabella premium).
-// Risposta JSON: {dati, usati, premium} oppure {codice} in caso di errore.
+// Itinerari su misura con Claude (Anthropic API).
+// Claude impiega 20-60 secondi: troppo per una richiesta normale su Netlify (risponde 504).
+// Per questo il lavoro è diviso in tre passi:
+//   1. POST qui: controlli (accesso, 3 gratuiti, premium), poi crea un "lavoro" e lo firma;
+//   2. il browser passa il lavoro firmato alla funzione in background (netlify/functions/itinerario-background.mjs),
+//      che ha fino a 15 minuti, chiama Claude e salva il risultato;
+//   3. GET qui: il browser chiede ogni pochi secondi se il lavoro è finito.
+import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { ALL } from "@/lib/viaggi/dati";
 import { conDettagli } from "@/lib/viaggi/dettagli";
 import { daIndirizzo } from "@/lib/viaggi/parametri";
-import { itinPrompt, leggiItinerario } from "@/lib/itinerari/prompt";
+import { itinPrompt } from "@/lib/itinerari/prompt";
+import { firma } from "@/lib/itinerari/firma.mjs";
 import { chiaveItinerario, temiValidi, GRATUITI, PREMIUM_AL_GIORNO } from "@/lib/itinerari/temi";
 
-export const maxDuration = 60;
-
-const MODELLO = "claude-sonnet-5-5";
 const json = (body, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+const SCADENZA_AVVIO = 2 * 60 * 1000; // il lavoro firmato va avviato entro 2 minuti
+const ATTESA_MASSIMA = 3 * 60 * 1000; // oltre, un lavoro ancora in corso si considera perso
+
+async function contaUsati(supabase, userId) {
+  const { count } = await supabase.from("itinerari").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  return count ?? 0;
+}
 
 export async function POST(request) {
   let body;
@@ -26,82 +36,61 @@ export async function POST(request) {
   const p = daIndirizzo(Object.fromEntries(new URLSearchParams(typeof body.qs === "string" ? body.qs : "")));
   const temi = temiValidi(body.temi);
   const chiave = chiaveItinerario(d.id, p, temi);
-  const rigenera = body.rigenera === true;
 
   // Già creato e non si chiede di rigenerarlo: lo restituisce senza consumare
-  if (!rigenera) {
+  if (body.rigenera !== true) {
     const { data: esistente } = await supabase.from("itinerari").select("dati").eq("user_id", user.id).eq("chiave", chiave).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (esistente) return json({ dati: esistente.dati, giaPronto: true });
   }
 
   // Quanti ne ha già creati e se è premium
-  const [{ count: usati }, { data: prem }] = await Promise.all([
-    supabase.from("itinerari").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+  const [usati, { data: prem }] = await Promise.all([
+    contaUsati(supabase, user.id),
     supabase.from("premium").select("user_id").eq("user_id", user.id).maybeSingle(),
   ]);
-  if (!prem && (usati ?? 0) >= GRATUITI) return json({ codice: "limite", usati }, 402);
+  if (!prem && usati >= GRATUITI) return json({ codice: "limite", usati }, 402);
   if (prem) {
     const oggi = new Date(); oggi.setUTCHours(0, 0, 0, 0);
     const { count: oggiN } = await supabase.from("itinerari").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", oggi.toISOString());
     if ((oggiN ?? 0) >= PREMIUM_AL_GIORNO) return json({ codice: "troppi" }, 429);
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return json({ codice: "non_attivo" }, 503);
+  if (!process.env.ANTHROPIC_API_KEY) return json({ codice: "non_attivo" }, 503);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) return json({ codice: "accedi" }, 401);
 
-  // Tutto avviene dentro la richiesta e la risposta parte solo alla fine: su Netlify una risposta
-  // "a pezzi" fa chiudere la funzione appena inizia e Claude resta a metà. Limite Netlify: 60 s.
-  const ctl = new AbortController();
-  const t0 = Date.now();
-  const timer = setTimeout(() => ctl.abort(), 52000);
-  let testo = "", motivo = null, codice = null;
-  try {
-    const risposta = await fetch(process.env.ANTHROPIC_API_URL || "https://api.anthropic.com/v1/messages", { // ANTHROPIC_API_URL solo per prove in locale
-      method: "POST",
-      signal: ctl.signal,
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODELLO, max_tokens: 5000, stream: true, messages: [{ role: "user", content: itinPrompt(d, p, temi) }] }),
-    });
-    if (!risposta.ok || !risposta.body) {
-      codice = risposta.status === 429 || risposta.status === 529 ? "occupato" : risposta.status === 400 || risposta.status === 402 ? "credito" : "servizio";
-      console.error("Anthropic API", risposta.status, (await risposta.text().catch(() => "")).slice(0, 300));
-    } else {
-      const reader = risposta.body.getReader(), dec = new TextDecoder();
-      let buf = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf("\n\n")) >= 0) {
-          const blocco = buf.slice(0, i); buf = buf.slice(i + 2);
-          const riga = blocco.split("\n").find((l) => l.startsWith("data:"));
-          if (!riga) continue;
-          let ev; try { ev = JSON.parse(riga.slice(5)); } catch { continue; }
-          if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") testo += ev.delta.text;
-          if (ev.type === "message_delta" && ev.delta?.stop_reason) motivo = ev.delta.stop_reason;
-          if (ev.type === "error") { codice = ev.error?.type === "overloaded_error" ? "occupato" : "interrotto"; console.error("Anthropic API errore nello stream", JSON.stringify(ev.error).slice(0, 300)); }
-        }
-      }
-    }
-  } catch (e) {
-    codice = e?.name === "AbortError" ? "tempo" : "rete";
-    console.error("Anthropic API", codice, String(e).slice(0, 200));
-  } finally {
-    clearTimeout(timer);
+  // Il lavoro: la riga serve al browser per sapere quando è finito, e impedisce di avviarlo due volte
+  const lavoro = randomUUID();
+  const { error } = await supabase.from("itinerari_lavori").insert({ id: lavoro, user_id: user.id, chiave });
+  if (error) { console.error("Lavoro itinerario", error.message); return json({ codice: "servizio" }, 500); }
+
+  const dati = JSON.stringify({
+    lavoro, uid: user.id, chiave, dest: d.id, temi, premium: !!prem,
+    prompt: itinPrompt(d, p, temi), token: session.access_token, scade: Date.now() + SCADENZA_AVVIO,
+  });
+  return json({ lavoro, avvio: { dati, firma: firma(dati) } });
+}
+
+// Stato di un lavoro: in_corso | ok (con l'itinerario) | errore (con il codice)
+export async function GET(request) {
+  const lavoro = new URL(request.url).searchParams.get("lavoro") || "";
+  if (!/^[0-9a-f-]{36}$/.test(lavoro)) return json({ codice: "richiesta" }, 400);
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return json({ codice: "accedi" }, 401);
+
+  const { data: riga } = await supabase.from("itinerari_lavori").select("chiave, stato, codice, created_at").eq("id", lavoro).maybeSingle();
+  if (!riga) return json({ stato: "errore", codice: "lavoro" });
+  if (riga.stato === "errore") return json({ stato: "errore", codice: riga.codice || "servizio" });
+  if (riga.stato === "ok") {
+    const [{ data: it }, usati] = await Promise.all([
+      supabase.from("itinerari").select("dati").eq("user_id", user.id).eq("chiave", riga.chiave).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      contaUsati(supabase, user.id),
+    ]);
+    if (it) return json({ stato: "ok", dati: it.dati, usati });
+    return json({ stato: "errore", codice: "salvataggio" });
   }
-  const secondi = Math.round((Date.now() - t0) / 1000);
-  if (codice) {
-    console.error("Itinerario non creato", { codice, secondi, caratteri: testo.length });
-    return json({ codice }, 502);
-  }
-  const dati = leggiItinerario(testo);
-  if (!dati) {
-    console.error("Itinerario illeggibile", { secondi, motivo, caratteri: testo.length, inizio: testo.slice(0, 200), fine: testo.slice(-200) });
-    return json({ codice: motivo === "max_tokens" ? "lungo" : "lettura" }, 502);
-  }
-  const { error } = await supabase.from("itinerari").insert({ user_id: user.id, chiave, dest_id: d.id, temi, dati });
-  if (error) console.error("Salvataggio itinerario", error.message);
-  console.log("Itinerario creato", { dest: d.id, temi: temi.join("+"), secondi, caratteri: testo.length });
-  return json({ dati, usati: (usati ?? 0) + 1, premium: !!prem });
+  if (Date.now() - new Date(riga.created_at).getTime() > ATTESA_MASSIMA) return json({ stato: "errore", codice: "tempo" });
+  return json({ stato: riga.stato }); // nuovo (non ancora partito) oppure in_corso
 }

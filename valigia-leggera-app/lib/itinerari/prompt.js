@@ -42,7 +42,7 @@ ${themes.includes("classico") ? "Livello atteso, per esempio per Verona: Arena, 
 CONTESTO
 Viaggiatori: ${who}. Partenza ${p.date}, ${p.nights} notti, ${seasonLabel(p.date, d)}. Scrivi in italiano.
 
-Sii conciso: "what" e "tip" al massimo 15 parole ciascuno.
+Sii conciso: "what" e "tip" al massimo 20 parole ciascuno.
 
 Nel campo "kind" scrivi "cibo" per mercati, locali, botteghe, cantine e assaggi, "visita" per tutto il resto.
 
@@ -50,23 +50,5 @@ Rispondi SOLO con JSON in questa forma:
 {"days":[{"title":"titolo del giorno","items":[{"slot":"Mattina","kind":"visita","name":"nome esatto del luogo","area":"quartiere o via","what":"una frase","dish":"piatto o prodotto tipico (solo tema enogastronomico, altrimenti stringa vuota)","cost":0}],"tip":"consiglio pratico breve"}],"food":[{"name":"nome del locale o piatto","what":"una frase"}]}`;
 }
 
-// Estrae e controlla il JSON della risposta (Claude a volte aggiunge testo o ``` attorno)
-export function leggiItinerario(testo) {
-  const a = testo.indexOf("{"), b = testo.lastIndexOf("}");
-  if (a < 0 || b <= a) return null;
-  let data;
-  try { data = JSON.parse(testo.slice(a, b + 1)); } catch { return null; }
-  if (!data || !Array.isArray(data.days) || !data.days.length) return null;
-  const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
-  return {
-    days: data.days.slice(0, 8).map((g, i) => ({
-      title: str(g.title, 120) || "Giorno " + (i + 1),
-      items: (Array.isArray(g.items) ? g.items : []).slice(0, 10).map((x) => ({
-        slot: str(x.slot, 30), kind: x.kind === "cibo" ? "cibo" : "visita", name: str(x.name, 140), area: str(x.area, 120),
-        what: str(x.what, 400), dish: str(x.dish, 160), cost: typeof x.cost === "number" && x.cost >= 0 && x.cost < 1000 ? Math.round(x.cost) : null,
-      })).filter((x) => x.name),
-      tip: str(g.tip, 400),
-    })),
-    food: (Array.isArray(data.food) ? data.food : []).slice(0, 6).map((f) => ({ name: str(f.name, 140), what: str(f.what, 300) })).filter((f) => f.name),
-  };
-}
+// La lettura della risposta sta in leggi.mjs (la usa anche la funzione in background)
+export { leggiItinerario } from "./leggi.mjs";

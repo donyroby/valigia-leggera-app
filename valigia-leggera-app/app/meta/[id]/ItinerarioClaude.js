@@ -8,6 +8,7 @@ import { TEMI, ETICHETTA_PULSANTE, GRATUITI, chiaveItinerario, temiValidi } from
 const mapsUrl = (name, city) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + ", " + city);
 const ERRORI = {
   accedi: "Per creare un itinerario su misura devi prima accedere.",
+  salvataggio: "L'itinerario è pronto ma non sono riuscito a salvarlo. Riprova tra poco.",
   limite: `Hai già usato i tuoi ${GRATUITI} itinerari gratuiti. Presto arriverà la versione premium per crearne altri.`,
   troppi: "Hai creato molti itinerari oggi: riprova domani.",
   non_attivo: "Gli itinerari su misura non sono ancora attivi. Riprova più tardi.",
@@ -15,7 +16,7 @@ const ERRORI = {
   credito: "Il servizio non è disponibile in questo momento: riprova più tardi.",
   interrotto: "La creazione si è interrotta. Riprova: non ti è stato conteggiato.",
   lettura: "Non sono riuscito a leggere l'itinerario. Riprova: non ti è stato conteggiato.",
-  tempo: "Claude ci ha messo troppo questa volta. Riprova: non ti è stato conteggiato.",
+  tempo: "Ci sta mettendo più del previsto. Ricarica la pagina tra qualche minuto: se l'itinerario è pronto lo trovi qui.",
   lungo: "L'itinerario è venuto troppo lungo. Riprova: non ti è stato conteggiato.",
 };
 // Il codice tra parentesi aiuta a capire il problema se qualcuno lo segnala
@@ -48,21 +49,40 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
     });
   };
 
+  // 1) il sito controlla e prepara il lavoro; 2) la funzione in background lo esegue; 3) si chiede ogni 3 s se è pronto
   async function crea(rigenera) {
     ctl.current = new AbortController();
+    const signal = ctl.current.signal;
     setSec(0);
     setStato({ fase: "carico" });
+    const finito = (j) => {
+      setMappa((m) => ({ ...m, [chiave]: j.dati }));
+      if (typeof j.usati === "number") setUsati(j.usati);
+      setStato({ fase: "pronto" });
+    };
     try {
       const res = await fetch("/api/itinerario", {
-        method: "POST", signal: ctl.current.signal, headers: { "content-type": "application/json" },
+        method: "POST", signal, headers: { "content-type": "application/json" },
         body: JSON.stringify({ destId, qs, temi, rigenera }),
       });
       const j = await res.json().catch(() => ({ codice: `http_${res.status}` }));
-      if (j.dati) {
-        setMappa((m) => ({ ...m, [chiave]: j.dati }));
-        if (typeof j.usati === "number") setUsati(j.usati);
-        setStato({ fase: "pronto" });
-      } else setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
+      if (j.dati) return finito(j);
+      if (!j.lavoro) return setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
+
+      const av = await fetch("/.netlify/functions/itinerario-background", {
+        method: "POST", signal, headers: { "content-type": "application/json" }, body: JSON.stringify(j.avvio),
+      });
+      if (!av.ok) return setStato({ fase: "errore", msg: errore(`avvio_${av.status}`) });
+
+      const t0 = Date.now();
+      while (Date.now() - t0 < 200000) {
+        await new Promise((r, no) => { const t = setTimeout(r, 3000); signal.addEventListener("abort", () => { clearTimeout(t); no(new DOMException("", "AbortError")); }, { once: true }); });
+        const r = await fetch(`/api/itinerario?lavoro=${j.lavoro}`, { signal, cache: "no-store" });
+        const st = await r.json().catch(() => ({}));
+        if (st.stato === "ok" && st.dati) return finito(st);
+        if (st.stato === "errore") return setStato({ fase: "errore", msg: errore(st.codice) });
+      }
+      setStato({ fase: "errore", msg: errore("tempo") });
     } catch (e) {
       if (e?.name === "AbortError") { setStato({ fase: "pronto" }); return; }
       setStato({ fase: "errore", msg: errore("connessione") });
@@ -79,7 +99,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
 
   let azione;
   if (stato.fase === "carico") {
-    const msg = sec < 8 ? `Sto pensando ai luoghi giusti a ${destName}…` : sec < 25 ? "Sto scrivendo l'itinerario…" : "Ci sto mettendo più del solito, ma sto ancora lavorando…";
+    const msg = sec < 8 ? `Sto pensando ai luoghi giusti a ${destName}…` : sec < 45 ? "Sto scrivendo l'itinerario…" : "Ci sto mettendo più del solito, ma sto ancora lavorando…";
     azione = (
       <div className={s.genbox}>
         <p className={s.fine} role="status">{msg} · {sec} s</p>
@@ -103,7 +123,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
         <button type="button" className={`${s.btn} ${s.sun}`} onClick={() => crea(false)}>{lab}</button>
         <p className={s.fine}>
           Claude sceglie luoghi reali della città, adatti al tuo profilo, alla durata e alla stagione, con il link alla mappa per verificarli.
-          Di solito servono 20-40 secondi.
+          Di solito serve meno di un minuto.
           {restanti != null && ` Ti ${restanti === 1 ? "resta 1 itinerario gratuito" : `restano ${restanti} itinerari gratuiti`} su ${GRATUITI}.`}
         </p>
       </div>
