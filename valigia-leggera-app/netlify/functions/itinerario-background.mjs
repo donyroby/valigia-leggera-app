@@ -56,7 +56,7 @@ async function esegui(req) {
         method: "POST",
         signal: AbortSignal.timeout(180000),
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: MODELLO, max_tokens: 6000, messages: [{ role: "user", content: L.prompt }] }),
+        body: JSON.stringify({ model: MODELLO, max_tokens: 10000, messages: [{ role: "user", content: L.prompt }] }),
       });
     } catch (e) {
       return fallisci(e?.name === "TimeoutError" ? "tempo" : "rete", { errore: String(e).slice(0, 200) });

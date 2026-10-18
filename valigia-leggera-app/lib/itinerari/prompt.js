@@ -8,7 +8,7 @@ export function itinPrompt(d, p, temiIn) {
     classico: `
 TEMA: LUOGHI DA VISITARE. Le tappe sono i luoghi più significativi della città: monumenti, musei, chiese e palazzi storici, piazze, quartieri caratteristici e punti panoramici. Alterna i luoghi più celebri con qualche scorcio meno noto ma reale. Nel campo "what" spiega cosa si vede.`,
     enogastronomico: `
-TEMA: viaggio ENOGASTRONOMICO. Le tappe sono luoghi legati al cibo e al vino: mercati storici, botteghe e salumerie, forni e pasticcerie, gelaterie storiche, osterie e trattorie note, enoteche, cantine visitabili (anche nei dintorni), laboratori di cucina. Per ogni tappa indica in "dish" il piatto o prodotto tipico da provare, con la denominazione corretta (per esempio DOP o IGP quando esiste). Per i locali cita solo quelli storici o molto noti di cui sei certo; se non sei certo del nome di un locale, indica il mercato, la via o il quartiere e il piatto, senza inventare il locale. ${themeLong ? 'Quando è combinato con altri temi, il cibo occupa i pasti: ogni giorno pranzo e cena (slot "Pranzo" e "Cena"), più a scelta una colazione o una merenda tipica; il resto della giornata segue gli altri temi.' : 'Ogni giorno ha colazione, pranzo, merenda o aperitivo e cena (slot "Colazione", "Pranzo", "Merenda", "Cena"), più al massimo una visita non legata al cibo.'} In "cost" indica la spesa indicativa a persona per quel pasto o assaggio. Il budget per pasti e assaggi è circa ${Math.round(d.fo * 1.3)} euro a persona al giorno. Per questo tema le regole 4 e 5 valgono in modo adattato: niente conteggio fisso di tappe.${p.profile === "famiglia" ? " Viaggiano bambini: niente degustazioni di alcolici, proponi mercati, dolci, laboratori e pasti adatti a tutta la famiglia." : ""}`,
+TEMA: viaggio ENOGASTRONOMICO. Le tappe sono luoghi legati al cibo e al vino: mercati storici, botteghe e salumerie, forni e pasticcerie, gelaterie storiche, osterie e trattorie note, enoteche, cantine visitabili (anche nei dintorni), laboratori di cucina. Per ogni tappa indica in "dish" il piatto o prodotto tipico da provare, con la denominazione corretta (per esempio DOP o IGP quando esiste). Per i locali cita solo quelli storici o molto noti di cui sei certo; se non sei certo del nome di un locale, indica il mercato, la via o il quartiere e il piatto, senza inventare il locale. ${themeLong ? 'Quando è combinato con altri temi, il cibo occupa i pasti: ogni giorno pranzo e cena (slot "Pranzo" e "Cena"); il resto della giornata segue gli altri temi.' : 'Ogni giorno ha colazione, pranzo, merenda o aperitivo e cena (slot "Colazione", "Pranzo", "Merenda", "Cena"), più al massimo una visita non legata al cibo.'} In "cost" indica la spesa indicativa a persona per quel pasto o assaggio. Il budget per pasti e assaggi è circa ${Math.round(d.fo * 1.3)} euro a persona al giorno. Per questo tema le regole 4 e 5 valgono in modo adattato: niente conteggio fisso di tappe.${p.profile === "famiglia" ? " Viaggiano bambini: niente degustazioni di alcolici, proponi mercati, dolci, laboratori e pasti adatti a tutta la famiglia." : ""}`,
     natura: `
 TEMA: NATURA E ARIA APERTA. Le tappe sono parchi, sentieri, belvedere, laghi, coste, giardini e gite in luoghi naturali reali della città e dei dintorni, raggiungibili con mezzi pubblici. Nel campo "what" indica difficoltà e durata indicative. Se la città ha poca natura, scrivilo nel campo "tip" e proponi luoghi vicini reali.`,
     relax: `
@@ -36,18 +36,19 @@ REGOLE OBBLIGATORIE
 7. "cost" è il costo indicativo dell'ingresso a persona in euro: 0 se gratuito, null se non lo sai. Non inventare orari di apertura né prezzi precisi.
 8. Il budget per attività è circa ${Math.round(d.ac * 1.3)} euro a persona al giorno: alterna luoghi a pagamento e gratuiti.
 9. Se i giorni sono più di 3, un giorno può essere una gita in un luogo reale vicino, raggiungibile con treno o bus.
-10. Aggiungi 3 o 4 specialità o locali storici veri in "food".
+10. Aggiungi 3 specialità o locali storici veri in "food".
 ${themes.includes("classico") ? "Livello atteso, per esempio per Verona: Arena, Casa di Giulietta in via Cappello, Piazza delle Erbe, Ponte Pietra sull'Adige, Castelvecchio." : ""}
 
 CONTESTO
 Viaggiatori: ${who}. Partenza ${p.date}, ${p.nights} notti, ${seasonLabel(p.date, d)}. Scrivi in italiano.
 
-Sii conciso: "what" e "tip" al massimo 20 parole ciascuno.
+Sii conciso: "what" al massimo 12 parole, "tip" al massimo 15 parole, "area" solo il quartiere o la via. Non aggiungere tappe oltre quelle richieste.
 
-Nel campo "kind" scrivi "cibo" per mercati, locali, botteghe, cantine e assaggi, "visita" per tutto il resto.
+Nel campo "kind" scrivi "c" per mercati, locali, botteghe, cantine e assaggi (cibo), "v" per tutto il resto (visita).
 
-Rispondi SOLO con JSON in questa forma:
-{"days":[{"title":"titolo del giorno","items":[{"slot":"Mattina","kind":"visita","name":"nome esatto del luogo","area":"quartiere o via","what":"una frase","dish":"piatto o prodotto tipico (solo tema enogastronomico, altrimenti stringa vuota)","cost":0}],"tip":"consiglio pratico breve"}],"food":[{"name":"nome del locale o piatto","what":"una frase"}]}`;
+Rispondi SOLO con JSON compatto, senza testo prima o dopo. Ogni tappa è un array nell'ordine [slot, kind, name, area, what, dish, cost]; ogni voce di "food" è un array [name, what]:
+{"days":[{"title":"titolo del giorno","items":[["Mattina","v","nome esatto del luogo","quartiere o via","una frase breve","",0]],"tip":"consiglio pratico breve"}],"food":[["nome del locale o piatto","una frase breve"]]}
+In "dish" metti il piatto o prodotto tipico solo per le tappe di cibo del tema enogastronomico, altrimenti stringa vuota. In "cost" un numero, 0 se gratuito, null se non lo sai.`;
 }
 
 // La lettura della risposta sta in leggi.mjs (la usa anche la funzione in background)
