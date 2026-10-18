@@ -17,11 +17,12 @@ export default function IMieiDati({ email }) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("sessione");
-      const [p, v, s, it] = await Promise.all([
+      const [p, v, s, it, pr] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase.from("saved_trips").select("*").order("created_at", { ascending: true }),
         supabase.from("piggy_bank").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("itinerari").select("*").order("created_at", { ascending: true }),
+        supabase.from("premium_richieste").select("offerta, created_at, updated_at").eq("user_id", user.id).maybeSingle(),
       ]);
       if (p.error || v.error || s.error) throw new Error("lettura");
       const dati = {
@@ -32,6 +33,7 @@ export default function IMieiDati({ email }) {
         viaggi_salvati: v.data,
         salvadanaio: s.data,
         itinerari_su_misura: it.error ? [] : it.data,
+        richiesta_premium: pr.error ? null : pr.data,
       };
       const blob = new Blob([JSON.stringify(dati, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);

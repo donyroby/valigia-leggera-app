@@ -363,3 +363,15 @@
 .pillars b{font-family:var(--display);font-size:1.05rem}
 .page .pillars span{color:var(--ai-muted);font-size:.88rem;line-height:1.4}
 @media (max-width:520px){.pillars{grid-template-columns:minmax(0,1fr)}}
+
+/* Pagina premium */
+.offerte{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+@media (max-width:640px){.offerte{grid-template-columns:minmax(0,1fr)}}
+.offerta{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:10px;align-content:start;box-shadow:var(--shadow)}
+.offerta.scelta{border:2px solid var(--ai-bg)}
+.page .offerta h2{font-size:1.3rem}
+.prezzo{font-family:var(--display);font-size:2rem;font-weight:800;margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.prezzo small{font-family:var(--body);font-size:.9rem;font-weight:500;color:var(--muted)}
+.offerta ul{margin:0;padding-left:18px;color:var(--ink);display:grid;gap:4px}
+.linkBtn{background:none;border:0;padding:0;color:var(--sea);text-decoration:underline;cursor:pointer;font:inherit}
+.page .aibox .aiErr a{color:#7A1520}

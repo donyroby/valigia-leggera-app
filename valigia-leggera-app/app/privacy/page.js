@@ -28,6 +28,7 @@ export default function Privacy() {
         <li><strong>Viaggi salvati</strong>: meta, aeroporto di partenza, date, numero di persone, numero ed età dei bambini (senza nomi), budget e preferenze del viaggio.</li>
         <li><strong>Salvadanaio</strong>: le cifre che inserisci, l&apos;obiettivo e la cifra mensile. Sono solo promemoria: Valigia Leggera non gestisce denaro.</li>
         <li><strong>Itinerari su misura</strong>: gli itinerari che crei con Claude (meta, temi scelti e testo dell&apos;itinerario), per mostrarteli di nuovo e contare quelli gratuiti che hai usato.</li>
+        <li><strong>Richiesta premium</strong>: se nella pagina Premium chiedi di essere avvisato, l&apos;offerta che hai scelto e la data, per scriverti quando il premium sarà disponibile. Puoi ritirarla dalla stessa pagina.</li>
       </ul>
       <p>
         Le ultime scelte della ricerca vengono ricordate solo nel tuo browser, per comodità, e non ci vengono inviate.

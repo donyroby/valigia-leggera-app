@@ -36,7 +36,7 @@ export default async function ProfiloPage() {
         isNew={!profile}
       />
       <p className="account-line">
-        <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/salvadanaio">Salvadanaio</Link> · <Link href="/">Cerca un viaggio</Link>
+        <Link href="/viaggi">I miei viaggi salvati</Link> · <Link href="/salvadanaio">Salvadanaio</Link> · <Link href="/premium">Premium</Link> · <Link href="/">Cerca un viaggio</Link>
       </p>
       <IMieiDati email={user.email} />
       <form action="/auth/esci" method="post" className="logout">

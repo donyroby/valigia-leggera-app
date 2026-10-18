@@ -10,7 +10,7 @@ const mapsUrl = (name, city) => "https://www.google.com/maps/search/?api=1&query
 const ERRORI = {
   accedi: "Per creare un itinerario su misura devi prima accedere.",
   salvataggio: "L'itinerario è pronto ma non sono riuscito a salvarlo. Riprova tra poco.",
-  limite: `Hai già usato i tuoi ${GRATUITI} itinerari gratuiti. Presto arriverà la versione premium per crearne altri.`,
+  limite: `Hai già usato i tuoi ${GRATUITI} itinerari gratuiti.`,
   troppi: "Hai creato molti itinerari oggi: riprova domani.",
   non_attivo: "Gli itinerari su misura non sono ancora attivi. Riprova più tardi.",
   occupato: "Claude è molto richiesto in questo momento: riprova tra qualche minuto.",
@@ -100,7 +100,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
       if (j.dati) return finito(j);
       if (!j.lavoro) {
         if (j.codice === "limite") evento("itinerario-limite", "Limite gratuito raggiunto");
-        return setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`) });
+        return setStato({ fase: "errore", msg: errore(j.codice || `http_${res.status}`), codice: j.codice });
       }
 
       const av = await fetch("/.netlify/functions/itinerario-background", {
@@ -140,11 +140,12 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
       <span>Sempre incluso: scegli liberamente fino a due temi.</span>
     </p>
   );
-  const errBox = stato.fase === "errore" && <p className={s.aiErr} role="alert">{stato.msg}</p>;
+  const linkPremium = <Link href="/premium">Scopri il premium</Link>;
+  const errBox = stato.fase === "errore" && <p className={s.aiErr} role="alert">{stato.msg}{stato.codice === "limite" && <> {linkPremium}</>}</p>;
   const meta = (
     <div className={s.aiMeta}>
       <span>Pronto in circa 20 secondi</span>
-      {loggedIn && (premium ? <span>Account premium</span> : <span>{restanti} gratuiti su {GRATUITI}</span>)}
+      {loggedIn && (premium ? <span>Account premium</span> : <span>{restanti} gratuiti su {GRATUITI} · <Link href="/premium">Premium</Link></span>)}
     </div>
   );
 
@@ -172,7 +173,7 @@ export default function ItinerarioClaude({ destId, destName, qs, p, loggedIn, lo
       </>
     );
   } else if (!dati && restanti === 0) {
-    azione = <p className={s.aiErr}>{ERRORI.limite}</p>;
+    azione = <p className={s.aiErr}>{ERRORI.limite} {linkPremium}: con il premium ne crei quanti ne vuoi.</p>;
   } else if (!dati) {
     const lab = temi.length === 1 ? ETICHETTA_PULSANTE[temi[0]] : "Crea itinerario combinato";
     azione = (
